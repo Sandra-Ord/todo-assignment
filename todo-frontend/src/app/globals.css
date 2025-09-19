@@ -120,7 +120,7 @@ a {
     border-radius: 20px;
 }
 
-.dashboard .title {
+.title {
     color: var(--arapawa-blue);
     font-weight: bold;
 }
