@@ -21,6 +21,8 @@ export default function ToDoTaskDashboard() {
     const [taskNameValidationError, setTaskNameValidationError] = useState("");
     const [validationError, setValidationError] = useState("");
 
+    const [editTask, setEditTask] = useState({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: "" });
+
     const [activeAction, setActiveAction] = useState<"create" | "complete" | "delete" | "edit" | null>(null);
 
     const loadTasks = async () => {
@@ -55,6 +57,34 @@ export default function ToDoTaskDashboard() {
         }
         if (response.errors && response.errors.length > 0) {
             setValidationError(response.errors[0]);
+        }
+    }
+
+    const handleEditTask = async() => {
+
+        if (selectedTask) {
+            if (editTask.taskName.length < 1) {
+                setEditTask({ ...editTask, taskNameValidationError: "Task name is required!" })
+            }
+            if (editTask.dueDate.length < 1) {
+                setEditTask({ ...editTask, dueDateValidationError: "Due date is required!" })
+            }
+            if (editTask.taskName.length < 1 || editTask.dueDate.length < 1) {
+                return;
+            }
+
+            const response = await TaskService.editTask(selectedTask.id, editTask.taskName, editTask.dueDate);
+            if (!response.errors) {
+
+                setSelectedTask({...selectedTask, taskName: editTask.taskName, dueAt: editTask.dueDate});
+                setActiveAction(null);
+                setEditTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: "" });
+                // todo update value in tasks
+            }
+
+            if (response.errors && response.errors.length > 0) {
+                setValidationError(response.errors[0]);
+            }
         }
 
 
@@ -222,27 +252,42 @@ export default function ToDoTaskDashboard() {
                             <div className="border-bottom">
                                 <div className="p-2">
 
-                                    <div className="d-flex justify-content-between align-content-center">
-                                        <h2 className="d-flex gap-2 align-items-center">
+                                    {activeAction === "edit" ? (
+                                        <div>
+                                            <div className="d-flex align-items-center">
+                                                <input value={editTask.taskName}
+                                                       onChange={(e) => {
+                                                           setEditTask({ ...editTask, taskName: e.target.value, taskNameValidationError: "" })
+                                                       }}
+                                                       className="rounded-5 border-0 px-3 py-1 w-100"
+                                                       placeholder="Task name"/>
+                                            </div>
+                                            <div className="text-end small text-danger">{editTask.taskNameValidationError}</div>
+                                        </div>
+                                    ) : (
+                                        <div className="d-flex justify-content-between align-content-center">
+                                            <h2 className="d-flex gap-2 align-items-center">
                                             <span className="material-symbols-outlined"
-                                                style={{cursor: 'pointer'}}
-                                                onClick={() => {
-                                                    setActiveAction(activeAction === "complete" ? null : "complete");
-                                                }}
+                                                  style={{cursor: 'pointer'}}
+                                                  onClick={() => {
+                                                      setActiveAction(activeAction === "complete" ? null : "complete");
+                                                  }}
                                             >
                                                 {selectedTask.completedAt ? "check_box" : "check_box_outline_blank"}
                                             </span>
-                                            {selectedTask.taskName}
-                                        </h2>
-                                        <span className="material-symbols-outlined"
-                                              style={{ cursor: "pointer" }}
-                                              onClick={() => {
-                                                  setSelectedTask(null);
-                                                  setActiveAction(null);
-                                              }}>
+                                                {selectedTask.taskName}
+                                            </h2>
+                                            <span className="material-symbols-outlined"
+                                                  style={{ cursor: "pointer" }}
+                                                  onClick={() => {
+                                                      setSelectedTask(null);
+                                                      setActiveAction(null);
+                                                  }}>
                                             close
                                         </span>
-                                    </div>
+                                        </div>
+                                    )}
+
 
                                     <div className="d-flex justify-content-between align-items-center">
                                     <span className="text-muted"
@@ -298,17 +343,40 @@ export default function ToDoTaskDashboard() {
                                     its description. this has not yet been added to the data model and is a to do for now.
                                 </div>
 
-                                <div className="d-flex align-items-center gap-2">
-                                    <span className="material-symbols-outlined">calendar_clock</span>
-                                    Due{" "}
-                                    {new Date(selectedTask.dueAt).toLocaleString("en-GB", {
-                                        day: "2-digit",
-                                        month: "short",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                    })}
-                                    <span className="text-muted">(in 7 days)</span>
-                                </div>
+                                {activeAction === "edit" ? (
+                                    <div>
+                                        <div className="d-flex justify-content-between align-items-center">
+                                            <label className="d-flex gap-2" htmlFor="EditTaskDueDate">
+                                                <span className="material-symbols-outlined">calendar_clock</span>
+                                                Due Date
+                                            </label>
+                                            <div>
+                                                <input value={editTask.dueDate}
+                                                       onChange={(e) => {
+                                                           setEditTask({ ...editTask, dueDate: e.target.value, dueDateValidationError: "" })
+                                                       }}
+                                                       className="rounded-5 border-0 px-3 py-1"
+                                                       id="EditTaskDueDate"
+                                                       type="datetime-local"/>
+                                            </div>
+                                        </div>
+                                        <div className="text-end small text-danger">{editTask.dueDateValidationError}</div>
+                                    </div>
+                                ) : (
+                                    <div className="d-flex align-items-center gap-2">
+                                        <span className="material-symbols-outlined">calendar_clock</span>
+                                        Due{" "}
+                                        {new Date(selectedTask.dueAt).toLocaleString("en-GB", {
+                                            day: "2-digit",
+                                            month: "short",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                        <span className="text-muted">(in 7 days)</span>
+                                    </div>
+                                )}
+
+
 
                                 <div className="d-flex align-items-center gap-2">
                                     <span className="material-symbols-outlined">event_available</span>
@@ -326,7 +394,10 @@ export default function ToDoTaskDashboard() {
 
                                     <div className="d-flex justify-content-end gap-2 text-muted"
                                          style={{ cursor: "pointer" }}
-                                         onClick={() => {setActiveAction("edit")}}
+                                         onClick={() => {
+                                             setActiveAction("edit");
+                                             setEditTask({taskName: selectedTask?.taskName, taskNameValidationError: "", dueDate: selectedTask?.dueAt, dueDateValidationError: "" });
+                                         }}
                                     >
                                         Edit <span className="material-symbols-outlined">edit</span>
                                     </div>
@@ -364,7 +435,9 @@ export default function ToDoTaskDashboard() {
                                         <div className="d-flex justify-content-between px-4">
 
                                             <button
-                                                className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 warning">
+                                                className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 warning"
+                                                onClick={() => handleEditTask()}
+                                            >
                                                 <span className="material-symbols-outlined">edit</span>
                                                 Save
                                             </button>
@@ -385,9 +458,9 @@ export default function ToDoTaskDashboard() {
                         </div>
                     ) : activeAction === "create" ? (
                         <div className="">
+
                             <div className="border-bottom">
                                 <div className="p-2">
-
                                     <div className="d-flex justify-content-between align-content-center">
                                         <h2 className="d-flex align-items-center">
                                             Create a New Task
@@ -401,11 +474,10 @@ export default function ToDoTaskDashboard() {
                                             close
                                         </span>
                                     </div>
-
                                 </div>
-
                             </div>
-                            <div className="p-2 d-flex flex-column gap-3">
+
+                            <div className="p-2 pt-3 d-flex flex-column gap-3">
 
                                 <div>
                                     <div className="d-flex justify-content-between align-items-center gap-4">
@@ -447,7 +519,6 @@ export default function ToDoTaskDashboard() {
                                         <span className="material-symbols-outlined">check_box</span>
                                         Create
                                     </button>
-
                                 </div>
 
                             </div>

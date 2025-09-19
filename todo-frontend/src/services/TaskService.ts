@@ -60,6 +60,32 @@ export default class TaskService {
         }
     }
 
+    static async editTask(id:string, taskName: string, dueDate: string) : Promise<IResponse<ITask>> {
+        const taskData = {
+            id: id,
+            taskName: taskName,
+            dueAt: dueDate
+        }
+
+        try {
+            const response = await TaskService.httpClient.put<ITask>(`${id}`, taskData);
+            if (response.status < 300) {
+                return {
+                    data: response.data
+                };
+            }
+            return {
+                errors: [response.status.toString() + " " + response.statusText]
+            };
+
+        } catch (error) {
+
+            return {
+                errors: [JSON.stringify(error)]
+            };
+        }
+    }
+
 
     static async deleteTask(taskId: string) : Promise<IResponse<ITask>> {
         try {
