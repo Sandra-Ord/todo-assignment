@@ -3,5 +3,5 @@ export interface ITask {
     "taskName": string,
     "createdAt": string,
     "dueAt": string,
-    "completedAt": string,
+    "completedAt": string | null,
 }

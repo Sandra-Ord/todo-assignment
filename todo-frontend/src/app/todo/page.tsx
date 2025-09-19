@@ -15,7 +15,13 @@ export default function ToDoTaskDashboard() {
 
     const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
 
-    const [activeAction, setActiveAction] = useState<"complete" | "delete" | "edit" | null>(null);
+    const [newTaskName, setNewTaskName] = useState("");
+    const [newTaskDueDate, setNewTaskDueDate] = useState("");
+    const [dueDateValidationError, setDueDateValidationError] = useState("");
+    const [taskNameValidationError, setTaskNameValidationError] = useState("");
+    const [validationError, setValidationError] = useState("");
+
+    const [activeAction, setActiveAction] = useState<"create" | "complete" | "delete" | "edit" | null>(null);
 
     const loadTasks = async () => {
         const response = await TaskService.getTasks();
@@ -26,6 +32,33 @@ export default function ToDoTaskDashboard() {
 
         setIsLoading(false);
     };
+
+    const handleCreateTask = async() => {
+        if (newTaskName.length < 1) {
+            setTaskNameValidationError("Task name is required!");
+        }
+        if (newTaskDueDate.length < 1) {
+            setDueDateValidationError("Due date is required!");
+        }
+        if (newTaskName.length < 1 || newTaskDueDate.length < 1) {
+            return;
+        }
+
+        const response = await TaskService.createTask(newTaskName, newTaskDueDate);
+
+        if (response.data) {
+            setSelectedTask(response.data);
+            setActiveAction(null);
+            setNewTaskName("");
+            setNewTaskDueDate("");
+            tasks.push(response.data);
+        }
+        if (response.errors && response.errors.length > 0) {
+            setValidationError(response.errors[0]);
+        }
+
+
+    }
 
     const handleDeleteTask = async (taskId: string) => {
         const response = await TaskService.deleteTask(taskId);
@@ -58,7 +91,14 @@ export default function ToDoTaskDashboard() {
                     <span className="material-symbols-outlined">add_task</span> To Do Dashboard
                 </h3>
 
-                <span className="title material-symbols-outlined p-1">add</span>
+                <span className="title material-symbols-outlined p-1"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => {
+                          setSelectedTask(null);
+                          setActiveAction("create");
+                      }}>
+                    add
+                </span>
             </div>
 
             <div className="row p-2">
@@ -142,7 +182,14 @@ export default function ToDoTaskDashboard() {
                                              setActiveAction(null);
                                          }}>
                                         <div className="d-flex gap-2 align-items-center">
-                                            <span className="material-symbols-outlined">
+                                            <span className="material-symbols-outlined"
+                                                  style={{ cursor: "pointer" }}
+                                                  onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setSelectedTask(task);
+                                                      setActiveAction("complete");
+                                                  }}
+                                            >
                                                 {task.completedAt ? "check_box" : "check_box_outline_blank"}
                                             </span>
                                             <span>
@@ -336,8 +383,90 @@ export default function ToDoTaskDashboard() {
 
 
                         </div>
+                    ) : activeAction === "create" ? (
+                        <div className="">
+                            <div className="border-bottom">
+                                <div className="p-2">
+
+                                    <div className="d-flex justify-content-between align-content-center">
+                                        <h2 className="d-flex align-items-center">
+                                            Create a New Task
+                                        </h2>
+                                        <span className="material-symbols-outlined"
+                                              style={{ cursor: "pointer" }}
+                                              onClick={() => {
+                                                  setSelectedTask(null);
+                                                  setActiveAction(null);
+                                              }}>
+                                            close
+                                        </span>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            <div className="p-2 d-flex flex-column gap-3">
+
+                                <div>
+                                    <div className="d-flex justify-content-between align-items-center gap-4">
+                                        <label className="" htmlFor="NewTaskName">Task name</label>
+                                        <input value={newTaskName}
+                                               onChange={(e) => {
+                                                   setNewTaskName(e.target.value);
+                                                   setTaskNameValidationError("");
+                                               }}
+                                               className="rounded-5 border-0 px-3 py-1 "
+                                               id="NewTaskName"
+                                               placeholder="Task name..."/>
+                                    </div>
+                                    <div className="text-end small text-danger">{taskNameValidationError}</div>
+                                </div>
+
+                                <div>
+                                    <div className="d-flex justify-content-between align-items-center">
+                                        <label className="" htmlFor="NewTaskDueDate">Due date</label>
+                                        <div>
+                                            <input value={newTaskDueDate}
+                                                   onChange={(e) => {
+                                                       setNewTaskDueDate(e.target.value);
+                                                       setDueDateValidationError("");
+                                                   }}
+                                                   className="rounded-5 border-0 px-3 py-1"
+                                                   id="NewTaskDueDate"
+                                                   type="datetime-local"/>
+                                        </div>
+                                    </div>
+                                    <div className="text-end small text-danger">{dueDateValidationError}</div>
+                                </div>
+
+                                <div className="d-flex justify-content-center px-4">
+                                    <button
+                                        className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 success"
+                                        onClick={() => handleCreateTask()}
+                                    >
+                                        <span className="material-symbols-outlined">check_box</span>
+                                        Create
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
                     ) : (
-                        <div>
+                        <div className="d-flex flex-column h-100 gap-2 justify-content-center align-items-center"
+                             style={{ cursor: "pointer" }}
+                             onClick={() => {
+                                 setSelectedTask(null);
+                                 setActiveAction("create");
+                             }}
+                        >
+                            <div>
+                                Add a new task to do
+                            </div>
+                            <span className="material-symbols-outlined">
+                                add_circle
+                            </span>
                         </div>
                     )}
                 </div>

@@ -33,6 +33,33 @@ export default class TaskService {
         }
     }
 
+    static async createTask(taskName: string, dueDate: string) : Promise<IResponse<ITask>> {
+        const taskData = {
+            taskName: taskName,
+            // todo remove now date from here
+            createdAt: new Date().toISOString(),
+            dueAt: dueDate
+        }
+
+        try {
+            const response = await TaskService.httpClient.post<ITask>("", taskData);
+            if (response.status < 300) {
+                return {
+                    data: response.data
+                };
+            }
+            return {
+                errors: [response.status.toString() + " " + response.statusText]
+            };
+
+        } catch (error) {
+
+            return {
+                errors: [JSON.stringify(error)]
+            };
+        }
+    }
+
 
     static async deleteTask(taskId: string) : Promise<IResponse<ITask>> {
         try {
