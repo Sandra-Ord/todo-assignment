@@ -76,6 +76,11 @@ body {
     background-color: var(--dark-selago) !important;
 }
 
+.touchable-element {
+    cursor: pointer;
+}
+
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -130,3 +135,4 @@ a {
     background-color: var(--persian-blue);
     color: white;
 }
+

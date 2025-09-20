@@ -8,6 +8,9 @@ import TaskService from "@/services/TaskService";
 import TaskStatusBadge from "@/components/TaskStatusBadge";
 import DashboardButton from "@/components/DashboardButton";
 import {formatDate, untilDueDate} from "@/utils/dateFormat";
+import MaterialIcon from "@/components/MaterialIcon";
+import ConfirmActionButtons from "@/components/ConfirmActionButtons";
+import FormErrorMessage from "@/components/FormErrorMessage";
 
 export default function ToDoTaskDashboard() {
 
@@ -154,16 +157,13 @@ export default function ToDoTaskDashboard() {
             {/*Dashboard Header*/}
             <h3 className="title border-bottom p-1 pb-2 d-flex align-items-center justify-content-between">
                 <div className="d-flex gap-2 align-items-center">
-                    <span className="material-symbols-outlined">add_task</span> To Do Dashboard
+                    <MaterialIcon name="add_task"/> To Do Dashboard
                 </div>
-                <span className="material-symbols-outlined"
-                      style={{cursor: "pointer"}}
-                      onClick={() => {
-                          setSelectedTask(null);
-                          setActiveAction("create");
-                      }}>
-                    add
-                </span>
+                <MaterialIcon name="add" className="touchable-element"
+                              onClick={() => {
+                                  setSelectedTask(null);
+                                  setActiveAction("create");
+                              }}/>
             </h3>
 
 
@@ -175,17 +175,16 @@ export default function ToDoTaskDashboard() {
                     {/*Search bar*/}
                     <div className="d-flex justify-content-between align-items-center gap-4">
                         <input className="rounded-5 border-0 px-3 py-1 w-100" placeholder="Search task..."></input>
-                        <button className="rounded-5 border-0 px-3 py-1 primary d-flex align-items-center gap-2">
-                            <span className="d-none d-md-inline">Search</span><span className="material-symbols-outlined">search</span>
-                        </button>
+                        <DashboardButton text="Search" icon="search" onClick={() => {}} className="flex-row-reverse primary" textClassName="d-none d-md-inline"/>
                     </div>
 
                     {/*Sort and Filter*/}
                     <div className="d-flex justify-content-between align-items-center gap-4">
-                        <div className="d-flex align-items-center gap-2">
-                            <span role="button" className="dropdown-toggle d-flex align-items-center gap-2"
-                                  data-bs-toggle="dropdown" aria-expanded="false" style={{cursor: 'pointer'}}>
-                                <span className="material-symbols-outlined">sort</span> <span className="d-md-none d-lg-inline">Sort by</span>
+                        <div>
+                            <span role="button" className="dropdown-toggle d-flex align-items-center gap-2 touchable-element"
+                                  data-bs-toggle="dropdown" aria-expanded="false">
+                                <MaterialIcon name="sort"/>
+                                <span className="d-md-none d-lg-inline">Sort by</span>
                             </span>
                             <div className="dropdown-menu dropdown-menu-start">
                                 <button className="dropdown-item" type="button">Due Date</button>
@@ -201,10 +200,11 @@ export default function ToDoTaskDashboard() {
                                 </div>
                             </div>
                         </div>
-                        <div className="d-flex align-items-center gap-2">
-                            <span role="button" className="dropdown-toggle d-flex align-items-center gap-2"
-                                  data-bs-toggle="dropdown" aria-expanded="false" style={{cursor: 'pointer'}}>
-                                <span className="d-md-none d-lg-inline">Filter by</span> <span className="material-symbols-outlined">filter_list</span>
+                        <div>
+                            <span role="button" className="dropdown-toggle d-flex align-items-center gap-2 touchable-element"
+                                  data-bs-toggle="dropdown" aria-expanded="false">
+                                <span className="d-md-none d-lg-inline">Filter by</span>
+                                <MaterialIcon name="filter_list"/>
                             </span>
                             <div className="dropdown-menu dropdown-menu-end">
                                 <button className="dropdown-item" type="button">Action</button>
@@ -225,33 +225,31 @@ export default function ToDoTaskDashboard() {
                             <div className="d-flex flex-column gap-1">
                                 {tasks.map((task) => (
                                         <div key={task.id}
-                                             className={`task-list-item d-flex justify-content-between align-items-center py-2 px-1 border-bottom rounded-4
+                                             className={`touchable-element task-list-item d-flex justify-content-between align-items-center py-2 px-1 border-bottom rounded-4
                                          ${selectedTask?.id === task.id ? "selected-task" : ""}`}
-                                             style={{cursor: "pointer"}}
                                              onClick={() => {
                                                  setSelectedTask(task);
                                                  setActiveAction(null);
                                              }}>
                                             <div className="d-flex gap-2 align-items-center">
-                                            <span className="material-symbols-outlined"
-                                                  style={{cursor: "pointer"}}
-                                                  onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      setSelectedTask(task);
-                                                      setActiveAction("complete");
-                                                      setCompletedDate(new Date().toISOString().slice(0,16));
-                                                  }}
-                                            >
-                                                {task.completedAt ? "check_box" : "check_box_outline_blank"}
-                                            </span>
+                                                <span className="material-symbols-outlined"
+                                                      onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          setSelectedTask(task);
+                                                          setActiveAction("complete");
+                                                          setCompletedDate(new Date().toISOString().slice(0, 16));
+                                                      }}
+                                                >
+                                                    {task.completedAt ? "check_box" : "check_box_outline_blank"}
+                                                </span>
                                                 <span>
-                                                <div>{task.taskName}</div>
-                                                <div className="text-muted small">
-                                                    Due {formatDate(task.dueAt)}
-                                                </div>
-                                            </span>
+                                                    <div>{task.taskName}</div>
+                                                    <div className="text-muted small">
+                                                        Due {formatDate(task.dueAt)}
+                                                    </div>
+                                                </span>
                                             </div>
-                                            <TaskStatusBadge dueAt={task.dueAt} completedAt={task.completedAt} />
+                                            <TaskStatusBadge dueAt={task.dueAt} completedAt={task.completedAt}/>
                                         </div>
                                     )
                                 )}
@@ -285,33 +283,26 @@ export default function ToDoTaskDashboard() {
                                                    className="rounded-5 border-0 my-2 px-3 py-1 w-100"
                                                    placeholder="Task name"/>
                                         </div>
-                                        <div
-                                            className="text-end small text-danger">
-                                            {editTask.taskNameValidationError}
-                                        </div>
+                                        <FormErrorMessage message={editTask.taskNameValidationError}/>
                                     </div>
                                 ) : (
                                     <h2 className="title d-flex align-items-center justify-content-between">
                                         <div className="d-flex gap-2 align-items-center">
-                                            <span className="material-symbols-outlined"
-                                                  style={{cursor: 'pointer'}}
-                                                  onClick={() => {
-                                                      setActiveAction(activeAction === "complete" ? null : "complete");
-                                                      setCompletedDate(new Date().toISOString().slice(0,16));
-                                                  }}
-                                            >
-                                                {selectedTask.completedAt ? "check_box" : "check_box_outline_blank"}
-                                            </span>
+                                            <MaterialIcon
+                                                name={selectedTask.completedAt ? "check_box" : "check_box_outline_blank"}
+                                                className="touchable-element"
+                                                onClick={() => {
+                                                    setActiveAction(activeAction === "complete" ? null : "complete");
+                                                    setCompletedDate(new Date().toISOString().slice(0, 16));
+                                                }}/>
                                             {selectedTask.taskName}
                                         </div>
-                                        <span className="material-symbols-outlined"
-                                              style={{cursor: "pointer"}}
-                                              onClick={() => {
-                                                  setSelectedTask(null);
-                                                  setActiveAction(null);
-                                              }}>
-                                                    close
-                                        </span>
+                                        <MaterialIcon name="close"
+                                                      className="touchable-element"
+                                                      onClick={() => {
+                                                          setSelectedTask(null);
+                                                          setActiveAction(null);
+                                                      }}/>
                                     </h2>
                                 )}
 
@@ -321,7 +312,7 @@ export default function ToDoTaskDashboard() {
                                                       Created at{" "}
                                         {formatDate(selectedTask.createdAt)}
                                     </span>
-                                    <TaskStatusBadge dueAt={selectedTask.dueAt} completedAt={selectedTask.completedAt} />
+                                    <TaskStatusBadge dueAt={selectedTask.dueAt} completedAt={selectedTask.completedAt}/>
                                 </div>
 
                             </div>
@@ -330,19 +321,17 @@ export default function ToDoTaskDashboard() {
 
                                 {activeAction === "complete" && (
                                     <div className="d-flex flex-column gap-2">
-
                                         <div className="d-flex justify-content-between align-items-center">
                                             <span className="fw-bold">Task completed as of</span>
                                             <input className="rounded-5 border-0 px-3 py-1" type="datetime-local"
                                                    onChange={(e) => setCompletedDate(e.target.value)}
                                                    value={completedDate}/>
                                         </div>
-
-                                        <div className="d-flex justify-content-between px-lg-5 px-md-3 px-sm-5 py-2">
-                                            <DashboardButton text="Complete" icon="check_box" className="success" onClick={() => handleCompleteTask(selectedTask.id)}/>
-                                            <DashboardButton text="Cancel" icon="cancel" className="cancel" onClick={() => setActiveAction(null)}/>
-                                        </div>
-
+                                        <ConfirmActionButtons confirmText="Complete"
+                                                              confirmIcon="check_box"
+                                                              confirmClass="success"
+                                                              onConfirm={() => handleCompleteTask(selectedTask.id)}
+                                                              onCancel={() => setActiveAction(null)}/>
                                     </div>
                                 )}
 
@@ -356,8 +345,8 @@ export default function ToDoTaskDashboard() {
                                 {activeAction === "edit" ? (
                                     <div>
                                         <div className="d-flex justify-content-between align-items-center">
-                                            <label className="d-flex gap-2" htmlFor="EditTaskDueDate">
-                                                <span className="material-symbols-outlined">calendar_clock</span>
+                                            <label className="d-flex align-items-center gap-2" htmlFor="EditTaskDueDate">
+                                                <MaterialIcon name="calendar_clock"/>
                                                 Due Date
                                             </label>
                                             <input value={editTask.dueDate}
@@ -372,23 +361,20 @@ export default function ToDoTaskDashboard() {
                                                    id="EditTaskDueDate"
                                                    type="datetime-local"/>
                                         </div>
-                                        <div className="text-end small text-danger">
-                                            {editTask.dueDateValidationError}
-                                        </div>
+                                        <FormErrorMessage message={editTask.dueDateValidationError}/>
                                     </div>
                                 ) : (
                                     <div className="d-flex align-items-center gap-2">
-                                        <span className="material-symbols-outlined">calendar_clock</span>
+                                        <MaterialIcon name="calendar_clock"/>
                                         Due{" "}
                                         {formatDate(selectedTask.dueAt)}
-                                        <span className="text-muted">{untilDueDate(selectedTask.dueAt)}
-                                        </span>
+                                        <span className="text-muted">{untilDueDate(selectedTask.dueAt)}</span>
                                     </div>
                                 )}
 
                                 {selectedTask.completedAt && (
                                     <div className="d-flex align-items-center gap-2">
-                                        <span className="material-symbols-outlined">event_available</span>
+                                        <MaterialIcon name="event_available"/>
                                         Completed at {formatDate(selectedTask.completedAt)}
                                     </div>
                                 )}
@@ -396,17 +382,13 @@ export default function ToDoTaskDashboard() {
 
                                 {activeAction === null && (
                                     <div className="d-flex justify-content-between align-items-center py-5">
-                                        <div className="d-flex gap-2 text-muted"
-                                             style={{cursor: "pointer"}}
-                                             onClick={() => {
-                                                 setActiveAction("delete")
-                                             }}
+                                        <div className="d-flex gap-2 text-muted touchable-element"
+                                             onClick={() => {setActiveAction("delete")}}
                                         >
-                                            <span className="material-symbols-outlined">delete</span> Delete
+                                            <MaterialIcon name="delete"/> Delete
                                         </div>
 
-                                        <div className="d-flex gap-2 text-muted"
-                                             style={{cursor: "pointer"}}
+                                        <div className="d-flex gap-2 text-muted touchable-element"
                                              onClick={() => {
                                                  setActiveAction("edit");
                                                  setEditTask({
@@ -417,20 +399,21 @@ export default function ToDoTaskDashboard() {
                                                  });
                                              }}
                                         >
-                                            Edit <span className="material-symbols-outlined">edit</span>
+                                            Edit <MaterialIcon name="edit"/>
                                         </div>
-                                    </div>)}
-
+                                    </div>
+                                )}
 
                                 {activeAction === "delete" && (
                                     <div className="d-flex flex-column gap-4 py-5">
                                         <div className="text-center text-muted">
                                             Are you sure you want to delete this task?
                                         </div>
-                                        <div className="d-flex justify-content-between px-lg-5 px-md-3 px-sm-5">
-                                            <DashboardButton text="Delete" icon="delete" className="danger" onClick={() => handleDeleteTask(selectedTask.id)}/>
-                                            <DashboardButton text="Cancel" icon="cancel" className="cancel" onClick={() => setActiveAction(null)}/>
-                                        </div>
+                                        <ConfirmActionButtons confirmText="Delete"
+                                                              confirmIcon="delete"
+                                                              confirmClass="danger"
+                                                              onConfirm={() => handleDeleteTask(selectedTask.id)}
+                                                              onCancel={() => setActiveAction(null)}/>
                                     </div>
                                 )}
 
@@ -439,10 +422,11 @@ export default function ToDoTaskDashboard() {
                                         <div className="text-center text-muted">
                                             Save changes?
                                         </div>
-                                        <div className="d-flex justify-content-between px-lg-5 px-md-3 px-sm-5">
-                                            <DashboardButton text="Save" icon="edit" className="warning" onClick={() => handleEditTask()}/>
-                                            <DashboardButton text="Cancel" icon="cancel" className="cancel" onClick={() => setActiveAction(null)}/>
-                                        </div>
+                                        <ConfirmActionButtons confirmText="Save"
+                                                              confirmIcon="edit"
+                                                              confirmClass="warning"
+                                                              onConfirm={() => handleEditTask()}
+                                                              onCancel={() => setActiveAction(null)}/>
                                     </div>
                                 )}
 
@@ -456,14 +440,11 @@ export default function ToDoTaskDashboard() {
 
                             <h2 className="title p-2 border-bottom d-flex align-items-center justify-content-between">
                                 Create a New Task
-                                <span className="material-symbols-outlined"
-                                      style={{cursor: "pointer"}}
-                                      onClick={() => {
-                                          setSelectedTask(null);
-                                          setActiveAction(null);
-                                      }}>
-                                    close
-                                </span>
+                                <MaterialIcon name="close" className="touchable-element"
+                                              onClick={() => {
+                                                  setSelectedTask(null);
+                                                  setActiveAction(null);
+                                              }}/>
                             </h2>
 
                             <div className="p-2 pt-3 d-flex flex-column gap-3">
@@ -483,7 +464,7 @@ export default function ToDoTaskDashboard() {
                                                id="NewTaskName"
                                                placeholder="Task name..."/>
                                     </div>
-                                    <div className="text-end small text-danger">{createTask.taskNameValidationError}</div>
+                                    <FormErrorMessage message={createTask.taskNameValidationError}/>
                                 </div>
 
                                 <div>
@@ -504,26 +485,27 @@ export default function ToDoTaskDashboard() {
                                                    type="datetime-local"/>
                                         </div>
                                     </div>
-                                    <div className="text-end small text-danger">{createTask.dueDateValidationError}</div>
+                                    <FormErrorMessage message={createTask.dueDateValidationError}/>
                                 </div>
 
                                 <div className="d-flex justify-content-center">
-                                    <DashboardButton text="Create" icon="add_circle" className="primary" onClick={() => handleCreateTask()}/>
+                                    <DashboardButton text="Create" icon="add_circle" className="primary"
+                                                     onClick={() => handleCreateTask()}/>
                                 </div>
 
                             </div>
 
                         </div>
                     ) : (
-                        <div className="title d-flex flex-column h-100 gap-2 justify-content-center align-items-center"
-                             style={{cursor: "pointer"}}
-                             onClick={() => {
-                                 setSelectedTask(null);
-                                 setActiveAction("create");
-                             }}
+                        <div
+                            className="title touchable-element d-flex flex-column h-100 gap-2 justify-content-center align-items-center"
+                            onClick={() => {
+                                setSelectedTask(null);
+                                setActiveAction("create");
+                            }}
                         >
                             Add a new task to do
-                            <span className="material-symbols-outlined">add_circle</span>
+                            <MaterialIcon name="add_circle"/>
                         </div>
                     )}
                 </div>
