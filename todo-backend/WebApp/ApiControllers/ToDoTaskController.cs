@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using App.Contracts.DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,25 +15,25 @@ namespace WebApp.ApiControllers
     [ApiController]
     public class ToDoTaskController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IAppUnitOfWork _uow;
 
-        public ToDoTaskController(AppDbContext context)
+        public ToDoTaskController(IAppUnitOfWork uow)
         {
-            _context = context;
+            _uow = uow;
         }
 
         // GET: api/ToDoTask
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ToDoTask>>> GetToDoTasks()
         {
-            return await _context.ToDoTasks.ToListAsync();
+            return Ok(await _uow.ToDoTasks.GetAllAsync());
         }
 
         // GET: api/ToDoTask/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ToDoTask>> GetToDoTask(int id)
         {
-            var toDoTask = await _context.ToDoTasks.FindAsync(id);
+            var toDoTask = await _uow.ToDoTasks.FirstOrDefaultAsync(id);
 
             if (toDoTask == null)
             {
@@ -51,16 +52,16 @@ namespace WebApp.ApiControllers
             {
                 return BadRequest();
             }
-
-            _context.Entry(toDoTask).State = EntityState.Modified;
+            
+            _uow.ToDoTasks.Update(toDoTask);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _uow.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ToDoTaskExists(id))
+                if (!_uow.ToDoTasks.Exists(id))
                 {
                     return NotFound();
                 }
@@ -78,8 +79,8 @@ namespace WebApp.ApiControllers
         [HttpPost]
         public async Task<ActionResult<ToDoTask>> PostToDoTask(ToDoTask toDoTask)
         {
-            _context.ToDoTasks.Add(toDoTask);
-            await _context.SaveChangesAsync();
+            _uow.ToDoTasks.Add(toDoTask);
+            await _uow.SaveChangesAsync();
 
             return CreatedAtAction("GetToDoTask", new { id = toDoTask.Id }, toDoTask);
         }
@@ -88,21 +89,17 @@ namespace WebApp.ApiControllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteToDoTask(int id)
         {
-            var toDoTask = await _context.ToDoTasks.FindAsync(id);
+            
+            var toDoTask = await _uow.ToDoTasks.FirstOrDefaultAsync(id);
             if (toDoTask == null)
             {
                 return NotFound();
             }
 
-            _context.ToDoTasks.Remove(toDoTask);
-            await _context.SaveChangesAsync();
+            _uow.ToDoTasks.Remove(toDoTask);
+            await _uow.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool ToDoTaskExists(int id)
-        {
-            return _context.ToDoTasks.Any(e => e.Id == id);
         }
     }
 }

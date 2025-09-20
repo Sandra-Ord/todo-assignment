@@ -553,7 +553,7 @@ export default function ToDoTaskDashboard() {
 
                         </div>
                     ) : (
-                        <div className="d-flex flex-column h-100 gap-2 justify-content-center align-items-center"
+                        <div className="title d-flex flex-column h-100 gap-2 justify-content-center align-items-center"
                              style={{cursor: "pointer"}}
                              onClick={() => {
                                  setSelectedTask(null);

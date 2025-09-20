@@ -1,3 +1,4 @@
+using App.Contracts.DAL;
 using App.DAL.EF;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString));
 
+builder.Services.AddScoped<IAppUnitOfWork, AppUnitOfWork>();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
