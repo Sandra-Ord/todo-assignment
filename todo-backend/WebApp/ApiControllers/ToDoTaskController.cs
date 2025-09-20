@@ -74,6 +74,37 @@ namespace WebApp.ApiControllers
             return NoContent();
         }
 
+        // POST: api/ToDoTask/{id}/complete
+        [HttpPost("{id}/complete")]
+        public async Task<ActionResult<ToDoTask>> CompleteToDoTask(int id, DateTime? completedAt)
+        {
+            var toDoTask = await _uow.ToDoTasks.FirstOrDefaultAsync(id);
+            if (toDoTask == null)
+            {
+                return NotFound();
+            }
+            
+            toDoTask.CompletedAt = completedAt ?? DateTime.Now;
+            _uow.ToDoTasks.Update(toDoTask);
+            await _uow.SaveChangesAsync();
+            return Ok(toDoTask);
+        }
+
+        // POST: api/ToDoTask/{id}/uncomplete
+        [HttpPost("{id}/uncomplete")]
+        public async Task<ActionResult<ToDoTask>> UncompleteToDoTask(int id)
+        {
+            var toDoTask = await _uow.ToDoTasks.FirstOrDefaultAsync(id);
+            if (toDoTask == null)
+            {
+                return NotFound();
+            }
+            toDoTask.CompletedAt = null;
+            _uow.ToDoTasks.Update(toDoTask);
+            await _uow.SaveChangesAsync();
+            return Ok(toDoTask);
+        }
+        
         // POST: api/ToDoTask
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]

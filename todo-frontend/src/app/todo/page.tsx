@@ -27,6 +27,8 @@ export default function ToDoTaskDashboard() {
         dueDateValidationError: ""
     });
 
+    const [completedDate, setCompletedDate] = useState("");
+
     const [activeAction, setActiveAction] = useState<"create" | "complete" | "delete" | "edit" | null>(null);
 
     const [validationError, setValidationError] = useState("");
@@ -106,9 +108,37 @@ export default function ToDoTaskDashboard() {
             setTasks(tasks.filter((task) => task.id !== taskId));
             if (selectedTask?.id === taskId) {
                 setSelectedTask(null);
+                setActiveAction(null);
             }
         } else {
             console.error("Failed to delete task", response.errors);
+        }
+    }
+
+
+
+    const handleCompleteTask = async (taskId: string) => {
+        const response = await TaskService.completeTask(taskId, completedDate);
+        if (!response.errors) {
+            if (selectedTask?.id === taskId) {
+                setSelectedTask(response.data!);
+                setActiveAction(null);
+            }
+
+        } else {
+            console.error("Failed to complete task", response.errors);
+        }
+    }
+
+    const handleUncompleteTask = async (taskId: string) => {
+        const response = await TaskService.uncompleteTask(taskId);
+        if (!response.errors) {
+            if (selectedTask?.id === taskId) {
+                setSelectedTask(response.data!);
+                setActiveAction(null);
+            }
+        } else {
+            console.error("Failed to complete task", response.errors);
         }
     }
 
@@ -119,9 +149,9 @@ export default function ToDoTaskDashboard() {
 
     return (
 
-        <div className="p-4 dashboard">
+        <div className="p-4 my-3 dashboard">
 
-
+            {/*Dashboard Header*/}
             <h3 className="title border-bottom p-1 pb-2 d-flex align-items-center justify-content-between">
                 <div className="d-flex gap-2 align-items-center">
                     <span className="material-symbols-outlined">add_task</span> To Do Dashboard
@@ -137,60 +167,55 @@ export default function ToDoTaskDashboard() {
             </h3>
 
 
-            <div className="row p-2">
-                <div className="col-5 border-end d-flex flex-column gap-3">
-                    <div>
-                        <div className="d-flex justify-content-between align-items-center gap-4">
-                            <input className="rounded-5 border-0 px-3 py-1 w-100" placeholder="Search task..."></input>
-                            <button className="rounded-5 border-0 px-3 py-1 primary" type="submit">
-                                Search
-                            </button>
+            <div className="d-flex flex-wrap flex-row-reverse p-2">
+
+                {/*Task List Section*/}
+                <div className="col-12 col-md-5 order-2  d-flex flex-column gap-3 p-2 border-bottom">
+
+                    {/*Search bar*/}
+                    <div className="d-flex justify-content-between align-items-center gap-4">
+                        <input className="rounded-5 border-0 px-3 py-1 w-100" placeholder="Search task..."></input>
+                        <button className="rounded-5 border-0 px-3 py-1 primary d-flex align-items-center gap-2" type="submit">
+                            <span className="d-none d-md-inline">Search</span><span className="material-symbols-outlined">search</span>
+                        </button>
+                    </div>
+
+                    {/*Sort and Filter*/}
+                    <div className="d-flex justify-content-between align-items-center gap-4">
+                        <div className="d-flex align-items-center gap-2">
+                            <span role="button" className="dropdown-toggle d-flex align-items-center gap-2"
+                                  data-bs-toggle="dropdown" aria-expanded="false" style={{cursor: 'pointer'}}>
+                                <span className="material-symbols-outlined">sort</span> <span className="d-md-none d-lg-inline">Sort by</span>
+                            </span>
+                            <div className="dropdown-menu dropdown-menu-start">
+                                <button className="dropdown-item" type="button">Due Date</button>
+                                <button className="dropdown-item" type="button">Completion Date</button>
+                                <button className="dropdown-item" type="button">Creation Date</button>
+                                <li>
+                                    <hr className="dropdown-divider"/>
+                                </li>
+                                <div className="form-check form-switch dropdown-item">
+                                    <input className="form-check-input" type="checkbox" role="switch" checked
+                                           id="flexSwitchCheckDefault"/>
+                                    <label htmlFor="flexSwitchCheckDefault">Completed tasks last</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="d-flex align-items-center gap-2">
+                            <span role="button" className="dropdown-toggle d-flex align-items-center gap-2"
+                                  data-bs-toggle="dropdown" aria-expanded="false" style={{cursor: 'pointer'}}>
+                                <span className="d-md-none d-lg-inline">Filter by</span> <span className="material-symbols-outlined">filter_list</span>
+                            </span>
+                            <div className="dropdown-menu dropdown-menu-end">
+                                <button className="dropdown-item" type="button">Action</button>
+                                <button className="dropdown-item" type="button">Another action</button>
+                                <button className="dropdown-item" type="button">Something else here</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        <div className="d-flex justify-content-between align-items-center gap-4">
-
-                            <div className="d-flex align-items-center gap-2">
-                                <span role="button" className="dropdown-toggle d-flex align-items-center gap-2"
-                                      data-bs-toggle="dropdown" aria-expanded="false" style={{cursor: 'pointer'}}>
-                                    <span className="material-symbols-outlined">sort</span> Sort by
-                                </span>
-                                <div className="dropdown-menu dropdown-menu-start">
-                                    <button className="dropdown-item" type="button">Due Date</button>
-                                    <button className="dropdown-item" type="button">Completion Date</button>
-                                    <button className="dropdown-item" type="button">Creation Date</button>
-                                    <li>
-                                        <hr className="dropdown-divider"/>
-                                    </li>
-                                    <div className="form-check form-switch dropdown-item">
-                                        <input className="form-check-input" type="checkbox" role="switch" checked
-                                               id="flexSwitchCheckDefault"/>
-                                        <label htmlFor="flexSwitchCheckDefault">Completed tasks last</label>
-                                    </div>
-
-
-                                </div>
-
-                            </div>
-
-                            <div className="d-flex align-items-center gap-2">
-                                <span role="button" className="dropdown-toggle d-flex align-items-center gap-2"
-                                      data-bs-toggle="dropdown" aria-expanded="false" style={{cursor: 'pointer'}}>
-                                    Filter by <span className="material-symbols-outlined">filter_list</span>
-                                </span>
-                                <div className="dropdown-menu dropdown-menu-end">
-                                    <button className="dropdown-item" type="button">Action</button>
-                                    <button className="dropdown-item" type="button">Another action</button>
-                                    <button className="dropdown-item" type="button">Something else here</button>
-                                </div>
-
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div className="d-flex flex-column">
+                    {/*Task List*/}
+                    <div className="flex-grow-1 overflow-auto vh-100">
 
                         {isLoading ? (
                             <div className="d-flex align-items-center justify-content-center">
@@ -229,6 +254,7 @@ export default function ToDoTaskDashboard() {
                                                       e.stopPropagation();
                                                       setSelectedTask(task);
                                                       setActiveAction("complete");
+                                                      setCompletedDate(new Date().toISOString().slice(0,16));
                                                   }}
                                             >
                                                 {task.completedAt ? "check_box" : "check_box_outline_blank"}
@@ -256,7 +282,8 @@ export default function ToDoTaskDashboard() {
 
                 </div>
 
-                <div className="col-7">
+                {/*Task Detail View Section*/}
+                <div className="col-12 col-md-7 order-1 p-2 border-bottom">
 
                     {selectedTask ? (
 
@@ -290,6 +317,7 @@ export default function ToDoTaskDashboard() {
                                                   style={{cursor: 'pointer'}}
                                                   onClick={() => {
                                                       setActiveAction(activeAction === "complete" ? null : "complete");
+                                                      setCompletedDate(new Date().toISOString().slice(0,16));
                                                   }}
                                             >
                                                 {selectedTask.completedAt ? "check_box" : "check_box_outline_blank"}
@@ -332,12 +360,15 @@ export default function ToDoTaskDashboard() {
 
                                         <div className="d-flex justify-content-between align-items-center">
                                             <span className="fw-bold">Task completed as of</span>
-                                            <input className="rounded-5 border-0 px-3 py-1" type="datetime-local"/>
+                                            <input className="rounded-5 border-0 px-3 py-1" type="datetime-local"
+                                                   onChange={(e) => setCompletedDate(e.target.value)}
+                                                   value={completedDate}/>
                                         </div>
 
-                                        <div className="d-flex justify-content-between px-2">
+                                        <div className="d-flex justify-content-between px-lg-5 px-md-3 px-sm-5 py-2">
                                             <button
-                                                className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 success">
+                                                className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 success"
+                                                onClick={() => handleCompleteTask(selectedTask.id)}>
                                                 <span className="material-symbols-outlined">check_box</span>
                                                 Complete
                                             </button>
@@ -394,15 +425,56 @@ export default function ToDoTaskDashboard() {
                                             hour: "2-digit",
                                             minute: "2-digit",
                                         })}
-                                        <span className="text-muted">(in 7 days)</span>
+                                        <span className="text-muted">{(() => {
+                                            const now = new Date();
+                                            const due = new Date(selectedTask?.dueAt);
+                                            let difference = due - now;
+
+                                            if (difference <= 0) {
+                                                return "(overdue)";
+                                            }
+
+                                            const minutes = Math.floor(difference / (1000 * 60));
+                                            const hours = Math.floor(difference / (1000 * 60 * 60));
+                                            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                                            const weeks = Math.floor(days / 7);
+                                            const months = Math.floor(days / 30);
+
+                                            if (months >= 2) {
+                                                return `(in ${months} months)`;
+                                            } else if (weeks >= 2) {
+                                                return `(in ${weeks} weeks)`;
+                                            } else if (days >= 2) {
+                                                return `(in ${days} days)`;
+                                            } else if (hours >= 24) {
+                                                const inDays = Math.floor(hours / 24);
+                                                const inHours = hours % 24;
+                                                return `(in ${inDays} days ${inHours} hrs)`;
+                                            } else if (hours >= 1) {
+                                                const inHours = hours;
+                                                const inMinutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                                                return `(in ${inHours} hrs ${inMinutes} mins)`;
+                                            } else {
+                                                return `(in ${minutes} mins)`;
+                                            }
+                                        })()}
+                                        </span>
                                     </div>
                                 )}
 
 
-                                <div className="d-flex align-items-center gap-2">
-                                    <span className="material-symbols-outlined">event_available</span>
-                                    Completed at 28. September 12:00
-                                </div>
+                                {selectedTask.completedAt && (
+                                    <div className="d-flex align-items-center gap-2">
+                                        <span className="material-symbols-outlined">event_available</span>
+                                        Completed at {new Date(selectedTask.completedAt).toLocaleString("en-GB", {
+                                        day: "2-digit",
+                                        month: "short",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })}
+                                    </div>
+                                )}
+
 
                                 {activeAction === null && (
                                     <div className="d-flex justify-content-between align-items-center py-5">
@@ -437,7 +509,7 @@ export default function ToDoTaskDashboard() {
                                         <div className="text-center text-muted">
                                             Are you sure you want to delete this task?
                                         </div>
-                                        <div className="d-flex justify-content-between px-2">
+                                        <div className="d-flex justify-content-between px-lg-5 px-md-3 px-sm-5">
                                             <button
                                                 className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 danger"
                                                 onClick={() => handleDeleteTask(selectedTask.id)}>
@@ -459,7 +531,7 @@ export default function ToDoTaskDashboard() {
                                         <div className="text-center text-muted">
                                             Save changes?
                                         </div>
-                                        <div className="d-flex justify-content-between px-2">
+                                        <div className="d-flex justify-content-between px-lg-5 px-md-3 px-sm-5">
 
                                             <button
                                                 className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 warning"
@@ -565,6 +637,7 @@ export default function ToDoTaskDashboard() {
                         </div>
                     )}
                 </div>
+
             </div>
 
         </div>

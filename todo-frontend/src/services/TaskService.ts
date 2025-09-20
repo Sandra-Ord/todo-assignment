@@ -86,6 +86,51 @@ export default class TaskService {
         }
     }
 
+    static async completeTask(id:string, completedDate: string) : Promise<IResponse<ITask>> {
+        const data = {
+            completedAt: completedDate
+        }
+
+        try {
+            const response = await TaskService.httpClient.post<ITask>(`${id}/complete`, data);
+            if (response.status < 300) {
+                return {
+                    data: response.data
+                };
+            }
+            return {
+                errors: [response.status.toString() + " " + response.statusText]
+            };
+
+        } catch (error) {
+
+            return {
+                errors: [JSON.stringify(error)]
+            };
+        }
+    }
+
+    static async uncompleteTask(id:string) : Promise<IResponse<ITask>> {
+
+
+        try {
+            const response = await TaskService.httpClient.post<ITask>(`${id}/uncomplete`);
+            if (response.status < 300) {
+                return {
+                    data: response.data
+                };
+            }
+            return {
+                errors: [response.status.toString() + " " + response.statusText]
+            };
+
+        } catch (error) {
+
+            return {
+                errors: [JSON.stringify(error)]
+            };
+        }
+    }
 
     static async deleteTask(taskId: string) : Promise<IResponse<ITask>> {
         try {
