@@ -6,6 +6,8 @@ import {useEffect, useState} from "react";
 import {ITask} from "@/domain/ITask";
 import TaskService from "@/services/TaskService";
 import TaskStatusBadge from "@/components/TaskStatusBadge";
+import DashboardButton from "@/components/DashboardButton";
+import {formatDate, untilDueDate} from "@/utils/dateFormat";
 
 export default function ToDoTaskDashboard() {
 
@@ -92,7 +94,6 @@ export default function ToDoTaskDashboard() {
                 setActiveAction(null);
                 setEditTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
                 // todo update value in tasks
-                // todo return the updated task from backend for easier ui updating
             }
 
             if (response.errors && response.errors.length > 0) {
@@ -115,8 +116,6 @@ export default function ToDoTaskDashboard() {
             console.error("Failed to delete task", response.errors);
         }
     }
-
-
 
     const handleCompleteTask = async (taskId: string) => {
         const response = await TaskService.completeTask(taskId, completedDate);
@@ -176,7 +175,7 @@ export default function ToDoTaskDashboard() {
                     {/*Search bar*/}
                     <div className="d-flex justify-content-between align-items-center gap-4">
                         <input className="rounded-5 border-0 px-3 py-1 w-100" placeholder="Search task..."></input>
-                        <button className="rounded-5 border-0 px-3 py-1 primary d-flex align-items-center gap-2" type="submit">
+                        <button className="rounded-5 border-0 px-3 py-1 primary d-flex align-items-center gap-2">
                             <span className="d-none d-md-inline">Search</span><span className="material-symbols-outlined">search</span>
                         </button>
                     </div>
@@ -248,12 +247,7 @@ export default function ToDoTaskDashboard() {
                                                 <span>
                                                 <div>{task.taskName}</div>
                                                 <div className="text-muted small">
-                                                    Due {new Date(task.dueAt).toLocaleString("en-GB", {
-                                                    day: "2-digit",
-                                                    month: "short",
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                })}
+                                                    Due {formatDate(task.dueAt)}
                                                 </div>
                                             </span>
                                             </div>
@@ -325,12 +319,7 @@ export default function ToDoTaskDashboard() {
                                     <span className="text-muted"
                                           data-toggle="tooltip" data-placement="right" title="19.09.2024 23:59">
                                                       Created at{" "}
-                                        {new Date(selectedTask.createdAt).toLocaleString("en-GB", {
-                                            day: "2-digit",
-                                            month: "short",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })}
+                                        {formatDate(selectedTask.createdAt)}
                                     </span>
                                     <TaskStatusBadge dueAt={selectedTask.dueAt} completedAt={selectedTask.completedAt} />
                                 </div>
@@ -350,24 +339,12 @@ export default function ToDoTaskDashboard() {
                                         </div>
 
                                         <div className="d-flex justify-content-between px-lg-5 px-md-3 px-sm-5 py-2">
-                                            <button
-                                                className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 success"
-                                                onClick={() => handleCompleteTask(selectedTask.id)}>
-                                                <span className="material-symbols-outlined">check_box</span>
-                                                Complete
-                                            </button>
-
-                                            <button
-                                                className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 cancel"
-                                                onClick={() => setActiveAction(null)}>
-                                                <span className="material-symbols-outlined">cancel</span>
-                                                Cancel
-                                            </button>
+                                            <DashboardButton text="Complete" icon="check_box" className="success" onClick={() => handleCompleteTask(selectedTask.id)}/>
+                                            <DashboardButton text="Cancel" icon="cancel" className="cancel" onClick={() => setActiveAction(null)}/>
                                         </div>
 
                                     </div>
                                 )}
-
 
                                 <div>
                                     This is a placeholder text for a task which may or may not have some additional text
@@ -403,59 +380,16 @@ export default function ToDoTaskDashboard() {
                                     <div className="d-flex align-items-center gap-2">
                                         <span className="material-symbols-outlined">calendar_clock</span>
                                         Due{" "}
-                                        {new Date(selectedTask.dueAt).toLocaleString("en-GB", {
-                                            day: "2-digit",
-                                            month: "short",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })}
-                                        <span className="text-muted">{(() => {
-                                            const now = new Date();
-                                            const due = new Date(selectedTask?.dueAt);
-                                            let difference = due - now;
-
-                                            if (difference <= 0) {
-                                                return "(overdue)";
-                                            }
-
-                                            const minutes = Math.floor(difference / (1000 * 60));
-                                            const hours = Math.floor(difference / (1000 * 60 * 60));
-                                            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-                                            const weeks = Math.floor(days / 7);
-                                            const months = Math.floor(days / 30);
-
-                                            if (months >= 2) {
-                                                return `(in ${months} months)`;
-                                            } else if (weeks >= 2) {
-                                                return `(in ${weeks} weeks)`;
-                                            } else if (days >= 2) {
-                                                return `(in ${days} days)`;
-                                            } else if (hours >= 24) {
-                                                const inDays = Math.floor(hours / 24);
-                                                const inHours = hours % 24;
-                                                return `(in ${inDays} days ${inHours} hrs)`;
-                                            } else if (hours >= 1) {
-                                                const inHours = hours;
-                                                const inMinutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-                                                return `(in ${inHours} hrs ${inMinutes} mins)`;
-                                            } else {
-                                                return `(in ${minutes} mins)`;
-                                            }
-                                        })()}
+                                        {formatDate(selectedTask.dueAt)}
+                                        <span className="text-muted">{untilDueDate(selectedTask.dueAt)}
                                         </span>
                                     </div>
                                 )}
 
-
                                 {selectedTask.completedAt && (
                                     <div className="d-flex align-items-center gap-2">
                                         <span className="material-symbols-outlined">event_available</span>
-                                        Completed at {new Date(selectedTask.completedAt).toLocaleString("en-GB", {
-                                        day: "2-digit",
-                                        month: "short",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                    })}
+                                        Completed at {formatDate(selectedTask.completedAt)}
                                     </div>
                                 )}
 
@@ -494,18 +428,8 @@ export default function ToDoTaskDashboard() {
                                             Are you sure you want to delete this task?
                                         </div>
                                         <div className="d-flex justify-content-between px-lg-5 px-md-3 px-sm-5">
-                                            <button
-                                                className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 danger"
-                                                onClick={() => handleDeleteTask(selectedTask.id)}>
-                                                <span className="material-symbols-outlined">delete</span>
-                                                Delete
-                                            </button>
-                                            <button
-                                                className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 cancel"
-                                                onClick={() => setActiveAction(null)}>
-                                                <span className="material-symbols-outlined">cancel</span>
-                                                Cancel
-                                            </button>
+                                            <DashboardButton text="Delete" icon="delete" className="danger" onClick={() => handleDeleteTask(selectedTask.id)}/>
+                                            <DashboardButton text="Cancel" icon="cancel" className="cancel" onClick={() => setActiveAction(null)}/>
                                         </div>
                                     </div>
                                 )}
@@ -516,20 +440,8 @@ export default function ToDoTaskDashboard() {
                                             Save changes?
                                         </div>
                                         <div className="d-flex justify-content-between px-lg-5 px-md-3 px-sm-5">
-
-                                            <button
-                                                className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 warning"
-                                                onClick={() => handleEditTask()}
-                                            >
-                                                <span className="material-symbols-outlined">edit</span>
-                                                Save
-                                            </button>
-                                            <button
-                                                className="d-flex align-items-center gap-2 rounded-5 border-0 px-3 py-1 cancel"
-                                                onClick={() => setActiveAction(null)}>
-                                                <span className="material-symbols-outlined">cancel</span>
-                                                Cancel
-                                            </button>
+                                            <DashboardButton text="Save" icon="edit" className="warning" onClick={() => handleEditTask()}/>
+                                            <DashboardButton text="Cancel" icon="cancel" className="cancel" onClick={() => setActiveAction(null)}/>
                                         </div>
                                     </div>
                                 )}
@@ -596,13 +508,7 @@ export default function ToDoTaskDashboard() {
                                 </div>
 
                                 <div className="d-flex justify-content-center">
-                                    <button
-                                        className="d-flex gap-2 rounded-5 border-0 px-3 py-1 primary"
-                                        onClick={() => handleCreateTask()}
-                                    >
-                                        <span className="material-symbols-outlined">add_circle</span>
-                                        Create
-                                    </button>
+                                    <DashboardButton text="Create" icon="add_circle" className="primary" onClick={() => handleCreateTask()}/>
                                 </div>
 
                             </div>

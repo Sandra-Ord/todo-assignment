@@ -1,4 +1,3 @@
-
 interface StatusBadgeProps {
     dueAt: string | Date;
     completedAt?: string | Date | null;
