@@ -5,6 +5,7 @@ import styles from "./page.module.css";
 import {useEffect, useState} from "react";
 import {ITask} from "@/domain/ITask";
 import TaskService from "@/services/TaskService";
+import TaskStatusBadge from "@/components/TaskStatusBadge";
 
 export default function ToDoTaskDashboard() {
 
@@ -86,8 +87,8 @@ export default function ToDoTaskDashboard() {
 
             const response = await TaskService.editTask(selectedTask.id, editTask.taskName, editTask.dueDate);
             if (!response.errors) {
-
-                setSelectedTask({...selectedTask, taskName: editTask.taskName, dueAt: editTask.dueDate});
+                console.log(response);
+                setSelectedTask(response.data!);
                 setActiveAction(null);
                 setEditTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
                 // todo update value in tasks
@@ -223,22 +224,7 @@ export default function ToDoTaskDashboard() {
                             </div>
                         ) : (
                             <div className="d-flex flex-column gap-1">
-                                {tasks.map((task) => {
-                                    let badgeText = "";
-                                    let badgeClass = "";
-
-                                    if (task.completedAt) {
-                                        badgeText = "Completed";
-                                        badgeClass = "success";
-                                    } else if (new Date(task.dueAt) < new Date()) {
-                                        badgeText = "Overdue";
-                                        badgeClass = "danger";
-                                    } else {
-                                        badgeText = "Due soon";
-                                        badgeClass = "warning";
-                                    }
-
-                                    return (
+                                {tasks.map((task) => (
                                         <div key={task.id}
                                              className={`task-list-item d-flex justify-content-between align-items-center py-2 px-1 border-bottom rounded-4
                                          ${selectedTask?.id === task.id ? "selected-task" : ""}`}
@@ -271,10 +257,10 @@ export default function ToDoTaskDashboard() {
                                                 </div>
                                             </span>
                                             </div>
-                                            <span className={`badge ${badgeClass}`}>{badgeText}</span>
+                                            <TaskStatusBadge dueAt={task.dueAt} completedAt={task.completedAt} />
                                         </div>
-                                    );
-                                })}
+                                    )
+                                )}
                             </div>
                         )}
 
@@ -302,7 +288,7 @@ export default function ToDoTaskDashboard() {
                                                            taskNameValidationError: ""
                                                        })
                                                    }}
-                                                   className="rounded-5 border-0 px-3 py-1 w-100"
+                                                   className="rounded-5 border-0 my-2 px-3 py-1 w-100"
                                                    placeholder="Task name"/>
                                         </div>
                                         <div
@@ -346,9 +332,7 @@ export default function ToDoTaskDashboard() {
                                             minute: "2-digit",
                                         })}
                                     </span>
-                                    <span className="badge success">Completed</span>
-                                    {/*<span className="badge warning">Due soon</span>*/}
-                                    {/*<span className="badge danger">Overdue</span>*/}
+                                    <TaskStatusBadge dueAt={selectedTask.dueAt} completedAt={selectedTask.completedAt} />
                                 </div>
 
                             </div>
