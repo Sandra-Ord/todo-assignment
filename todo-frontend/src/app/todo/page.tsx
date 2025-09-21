@@ -11,6 +11,7 @@ import {formatDate, untilDueDate} from "@/utils/dateFormat";
 import MaterialIcon from "@/components/MaterialIcon";
 import ConfirmActionButtons from "@/components/ConfirmActionButtons";
 import FormErrorMessage from "@/components/FormErrorMessage";
+import {IFilter} from "@/domain/IFilter";
 
 export default function ToDoTaskDashboard() {
     const standardInput = "rounded-5 border-0 px-3 py-1"
@@ -36,6 +37,13 @@ export default function ToDoTaskDashboard() {
         dueDateValidationError: ""
     });
 
+    const [filter, setFilter] = useState<IFilter>({
+        completed: null,
+        search: "",
+        dueDateFrom: "",
+        dueDateUntil: ""
+    });
+
     const [completedDate, setCompletedDate] = useState("");
 
     const [activeAction, setActiveAction] = useState<"create" | "complete" | "delete" | "edit" | null>(null);
@@ -51,8 +59,6 @@ export default function ToDoTaskDashboard() {
     };
 
     const sortTasks = (tasks: ITask[]) => {
-
-
         return [...tasks].sort((a, b) => {
             if (completedLast) {
                 const aCompleted = Boolean(a.completedAt);
@@ -72,6 +78,27 @@ export default function ToDoTaskDashboard() {
             return bDate - aDate; // descending
         });
     }
+
+    const applyFilter = async () => {
+        const preparedFilter: IFilter = {
+            ...filter,
+            dueDateFrom: filter.dueDateFrom ? (new Date(filter.dueDateFrom).toISOString()) : "",
+            dueDateUntil: filter.dueDateUntil ? (new Date(filter.dueDateUntil).toISOString()) : ""
+        };
+
+        const response = await TaskService.getFilteredTasks({
+            completed: preparedFilter.completed,
+            search: preparedFilter.search || "",
+            dueDateFrom: preparedFilter.dueDateFrom || "",
+            dueDateUntil: preparedFilter.dueDateUntil || ""
+        });
+
+        if (response.data) {
+            setTasks(response.data);
+        } else if (response.errors) {
+            console.error("Failed to fetch filtered tasks", response.errors);
+        }
+    };
 
     const handleCreateTask = async () => {
         const updatedTask = {...createTask};
@@ -200,9 +227,10 @@ export default function ToDoTaskDashboard() {
 
                     {/*Search bar*/}
                     <div className="d-flex justify-content-between align-items-center gap-4">
-                        <input className={`${standardInput} w-100`} placeholder="Search task..."></input>
-                        <DashboardButton text="Search" icon="search" onClick={() => {
-                        }} className="flex-row-reverse primary" textClassName="d-none d-md-inline"/>
+                        <input className={`${standardInput} w-100`} placeholder="Search task..." value={filter.search}
+                               onChange={(e) => setFilter({...filter, search: e.target.value})}></input>
+                        <DashboardButton text="Search" icon="search" onClick={() => applyFilter()}
+                                         className="flex-row-reverse primary" textClassName="d-none d-md-inline"/>
                     </div>
 
                     {/*Sort and Filter*/}
@@ -216,13 +244,19 @@ export default function ToDoTaskDashboard() {
                             </span>
                             <ul className="dropdown-menu dropdown-menu-start ">
                                 <li>
-                                    <button className="dropdown-item" type="button" onClick={() => setSortBy("dueAt")}>Due Date</button>
+                                    <button className="dropdown-item" type="button"
+                                            onClick={() => setSortBy("dueAt")}>Due Date
+                                    </button>
                                 </li>
                                 <li>
-                                    <button className="dropdown-item" type="button" onClick={() => setSortBy("completedAt")}>Completion Date</button>
+                                    <button className="dropdown-item" type="button"
+                                            onClick={() => setSortBy("completedAt")}>Completion Date
+                                    </button>
                                 </li>
                                 <li>
-                                    <button className="dropdown-item" type="button" onClick={() => setSortBy("createdAt")}>Creation Date</button>
+                                    <button className="dropdown-item" type="button"
+                                            onClick={() => setSortBy("createdAt")}>Creation Date
+                                    </button>
                                 </li>
                                 <li>
                                     <hr className="dropdown-divider"/>
@@ -230,7 +264,8 @@ export default function ToDoTaskDashboard() {
                                 <li className="dropdown-item">
                                     <div className="form-check form-switch">
                                         <input className="form-check-input" type="checkbox" role="switch"
-                                               id="completedTasksLast" onChange={(e) => setCompletedLast(e.target.checked)}/>
+                                               id="completedTasksLast"
+                                               onChange={(e) => setCompletedLast(e.target.checked)}/>
                                         <label htmlFor="completedTasksLast">Completed Tasks Last</label>
                                     </div>
                                 </li>
@@ -246,8 +281,23 @@ export default function ToDoTaskDashboard() {
                             <ul className="dropdown-menu dropdown-menu-end">
                                 <li className="px-3 py-1 dropdown-item">
                                     <div className="form-check ">
-                                        <input className="form-check-input" type="checkbox" value=""
-                                               id="completedCheck"/>
+                                        <input className="form-check-input" type="checkbox"
+                                               checked={filter.completed === true}
+                                               onChange={(e) => {
+                                                   const completed = e.target.checked;
+                                                   setFilter({
+                                                       ...filter,
+                                                       completed: completed
+                                                           ? filter.completed === false
+                                                               ? null
+                                                               : true
+                                                           : filter.completed === true
+                                                               ? null
+                                                               : false
+                                                   });
+                                               }}
+                                               id="completedCheck"
+                                        />
                                         <label className="form-check-label" htmlFor="completedCheck">
                                             Completed
                                         </label>
@@ -256,7 +306,21 @@ export default function ToDoTaskDashboard() {
 
                                 <li className="px-3 py-1 dropdown-item">
                                     <div className="form-check ">
-                                        <input className="form-check-input" type="checkbox" value=""
+                                        <input className="form-check-input" type="checkbox"
+                                               checked={filter.completed === false}
+                                               onChange={(e) => {
+                                                   const uncompleted = e.target.checked;
+                                                   setFilter({
+                                                       ...filter,
+                                                       completed: uncompleted
+                                                           ? filter.completed === true
+                                                               ? null
+                                                               : false
+                                                           : filter.completed === false
+                                                               ? null
+                                                               : true
+                                                   });
+                                               }}
                                                id="uncompletedCheck"/>
                                         <label className="form-check-label" htmlFor="uncompletedCheck">
                                             Not Completed
@@ -273,8 +337,8 @@ export default function ToDoTaskDashboard() {
                                                 type="datetime-local"
                                                 id="DueDateFrom"
                                                 className={`${standardInput} w-100 shadow-sm`}
-                                                value={editTask.dueDate}
-                                                onChange={(e) => setEditTask({...editTask, dueDate: e.target.value})}
+                                                value={filter.dueDateFrom}
+                                                onChange={(e) => setFilter({...filter, dueDateFrom: e.target.value})}
                                             />
                                         </div>
                                         <div>
@@ -284,8 +348,8 @@ export default function ToDoTaskDashboard() {
                                                 type="datetime-local"
                                                 id="DueDateUntil"
                                                 className={`${standardInput} w-100 shadow-sm`}
-                                                value={editTask.dueDate}
-                                                onChange={(e) => setEditTask({...editTask, dueDate: e.target.value})}
+                                                value={filter.dueDateUntil}
+                                                onChange={(e) => setFilter({...filter, dueDateUntil: e.target.value})}
                                             />
                                         </div>
                                     </div>

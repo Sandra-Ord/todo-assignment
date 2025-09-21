@@ -1,6 +1,7 @@
 import axios from "axios";
 import {ITask} from "@/domain/ITask";
 import {IResponse} from "@/domain/IResultObject";
+import {IFilter} from "@/domain/IFilter";
 
 
 export default class TaskService {
@@ -147,6 +148,46 @@ export default class TaskService {
 
         } catch (error) {
 
+            return {
+                errors: [JSON.stringify(error)]
+            };
+        }
+    }
+
+    static async getFilteredTasks(filter: IFilter): Promise<IResponse<ITask[]>> {
+        try {
+            const params: Record<string, any> = {};
+
+            if (filter.completed !== null && filter.completed !== undefined) {
+                params.completed = filter.completed;
+            }
+
+            if (filter.search && filter.search.trim().length > 0) {
+                params.search = filter.search.trim();
+            }
+
+            const tryToIso = (v?: string) => {
+                if (!v) return undefined;
+                const d = new Date(v);
+                return isNaN(d.getTime()) ? undefined : d.toISOString();
+            };
+
+            const dueFromIso = tryToIso(filter.dueDateFrom);
+            const dueUntilIso = tryToIso(filter.dueDateUntil);
+
+            if (dueFromIso) params.dueDateFrom = dueFromIso;
+            if (dueUntilIso) params.dueDateUntil = dueUntilIso;
+
+            const response = await TaskService.httpClient.get<ITask[]>("filter", { params });
+            console.log(response);
+            if (response.status < 300) {
+                return { data: response.data };
+            }
+
+            return {
+                errors: [response.status.toString() + " " + response.statusText]
+            };
+        } catch (error) {
             return {
                 errors: [JSON.stringify(error)]
             };
