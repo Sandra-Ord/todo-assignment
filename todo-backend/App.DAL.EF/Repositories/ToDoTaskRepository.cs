@@ -54,8 +54,17 @@ public class ToDoTaskRepository : BaseEntityRepository<ToDoTask, AppDbContext>, 
         {
             query = query.Where(t => t.TaskName.Contains(filter.Search));
         }
+
+        if (filter.DueDateFrom.HasValue)
+        {
+            query = query.Where(t => t.DueAt >= filter.DueDateFrom.Value);
+        }
+
+        if (filter.DueDateUntil.HasValue)
+        {
+            query =  query.Where(t => t.DueAt <= filter.DueDateUntil.Value);
+        }
         
         return await query.ToListAsync();
     }
-
 }

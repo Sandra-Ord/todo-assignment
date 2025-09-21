@@ -13,11 +13,14 @@ import ConfirmActionButtons from "@/components/ConfirmActionButtons";
 import FormErrorMessage from "@/components/FormErrorMessage";
 
 export default function ToDoTaskDashboard() {
+    const standardInput = "rounded-5 border-0 px-3 py-1"
 
     const [isLoading, setIsLoading] = useState(true);
 
     const [tasks, setTasks] = useState<ITask[]>([]);
 
+    const [sortBy, setSortBy] = useState<"dueAt" | "completedAt" | "createdAt">("dueAt");
+    const [completedLast, setCompletedLast] = useState<boolean>(false);
 
     const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
     const [createTask, setCreateTask] = useState({
@@ -46,6 +49,29 @@ export default function ToDoTaskDashboard() {
         }
         setIsLoading(false);
     };
+
+    const sortTasks = (tasks: ITask[]) => {
+
+
+        return [...tasks].sort((a, b) => {
+            if (completedLast) {
+                const aCompleted = Boolean(a.completedAt);
+                const bCompleted = Boolean(b.completedAt);
+
+                if (aCompleted && !bCompleted) return 1; // b before a
+                if (!aCompleted && bCompleted) return -1; // a before b
+            }
+            const aDate = new Date(a[sortBy] ?? 0).getTime();
+            const bDate = new Date(b[sortBy] ?? 0).getTime();
+
+            if (sortBy === "completedAt") {
+                if (!aDate && bDate) return 1;  // a has no completedAt, b first
+                if (aDate && !bDate) return -1; // a has completedAt, a first
+            }
+
+            return bDate - aDate; // descending
+        });
+    }
 
     const handleCreateTask = async () => {
         const updatedTask = {...createTask};
@@ -174,43 +200,97 @@ export default function ToDoTaskDashboard() {
 
                     {/*Search bar*/}
                     <div className="d-flex justify-content-between align-items-center gap-4">
-                        <input className="rounded-5 border-0 px-3 py-1 w-100" placeholder="Search task..."></input>
-                        <DashboardButton text="Search" icon="search" onClick={() => {}} className="flex-row-reverse primary" textClassName="d-none d-md-inline"/>
+                        <input className={`${standardInput} w-100`} placeholder="Search task..."></input>
+                        <DashboardButton text="Search" icon="search" onClick={() => {
+                        }} className="flex-row-reverse primary" textClassName="d-none d-md-inline"/>
                     </div>
 
                     {/*Sort and Filter*/}
                     <div className="d-flex justify-content-between align-items-center gap-4">
-                        <div>
-                            <span role="button" className="dropdown-toggle d-flex align-items-center gap-2 touchable-element"
-                                  data-bs-toggle="dropdown" aria-expanded="false">
+                        <div className="btn-group">
+                            <span role="button"
+                                  className="dropdown-toggle d-flex align-items-center gap-2 touchable-element"
+                                  data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                                 <MaterialIcon name="sort"/>
                                 <span className="d-md-none d-lg-inline">Sort by</span>
                             </span>
-                            <div className="dropdown-menu dropdown-menu-start">
-                                <button className="dropdown-item" type="button">Due Date</button>
-                                <button className="dropdown-item" type="button">Completion Date</button>
-                                <button className="dropdown-item" type="button">Creation Date</button>
+                            <ul className="dropdown-menu dropdown-menu-start ">
+                                <li>
+                                    <button className="dropdown-item" type="button" onClick={() => setSortBy("dueAt")}>Due Date</button>
+                                </li>
+                                <li>
+                                    <button className="dropdown-item" type="button" onClick={() => setSortBy("completedAt")}>Completion Date</button>
+                                </li>
+                                <li>
+                                    <button className="dropdown-item" type="button" onClick={() => setSortBy("createdAt")}>Creation Date</button>
+                                </li>
                                 <li>
                                     <hr className="dropdown-divider"/>
                                 </li>
-                                <div className="form-check form-switch dropdown-item">
-                                    <input className="form-check-input" type="checkbox" role="switch" checked
-                                           id="flexSwitchCheckDefault"/>
-                                    <label htmlFor="flexSwitchCheckDefault">Completed tasks last</label>
-                                </div>
-                            </div>
+                                <li className="dropdown-item">
+                                    <div className="form-check form-switch">
+                                        <input className="form-check-input" type="checkbox" role="switch"
+                                               id="completedTasksLast" onChange={(e) => setCompletedLast(e.target.checked)}/>
+                                        <label htmlFor="completedTasksLast">Completed Tasks Last</label>
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
-                        <div>
-                            <span role="button" className="dropdown-toggle d-flex align-items-center gap-2 touchable-element"
-                                  data-bs-toggle="dropdown" aria-expanded="false">
+                        <div className="btn-group">
+                            <span role="button"
+                                  className="dropdown-toggle d-flex align-items-center gap-2 touchable-element"
+                                  data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                                 <span className="d-md-none d-lg-inline">Filter by</span>
                                 <MaterialIcon name="filter_list"/>
                             </span>
-                            <div className="dropdown-menu dropdown-menu-end">
-                                <button className="dropdown-item" type="button">Action</button>
-                                <button className="dropdown-item" type="button">Another action</button>
-                                <button className="dropdown-item" type="button">Something else here</button>
-                            </div>
+                            <ul className="dropdown-menu dropdown-menu-end">
+                                <li className="px-3 py-1 dropdown-item">
+                                    <div className="form-check ">
+                                        <input className="form-check-input" type="checkbox" value=""
+                                               id="completedCheck"/>
+                                        <label className="form-check-label" htmlFor="completedCheck">
+                                            Completed
+                                        </label>
+                                    </div>
+                                </li>
+
+                                <li className="px-3 py-1 dropdown-item">
+                                    <div className="form-check ">
+                                        <input className="form-check-input" type="checkbox" value=""
+                                               id="uncompletedCheck"/>
+                                        <label className="form-check-label" htmlFor="uncompletedCheck">
+                                            Not Completed
+                                        </label>
+                                    </div>
+                                </li>
+                                <li className="px-3 py-1">
+                                    <div className="fw-semibold small text-muted mb-2">Due Date Range</div>
+                                    <div className="d-flex flex-column gap-2">
+                                        <div>
+                                            <label htmlFor="DueDateFrom"
+                                                   className="form-label small text-muted">From</label>
+                                            <input
+                                                type="datetime-local"
+                                                id="DueDateFrom"
+                                                className={`${standardInput} w-100 shadow-sm`}
+                                                value={editTask.dueDate}
+                                                onChange={(e) => setEditTask({...editTask, dueDate: e.target.value})}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="DueDateUntil"
+                                                   className="form-label small text-muted">Until</label>
+                                            <input
+                                                type="datetime-local"
+                                                id="DueDateUntil"
+                                                className={`${standardInput} w-100 shadow-sm`}
+                                                value={editTask.dueDate}
+                                                onChange={(e) => setEditTask({...editTask, dueDate: e.target.value})}
+                                            />
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
                     </div>
 
@@ -223,7 +303,7 @@ export default function ToDoTaskDashboard() {
                             </div>
                         ) : (
                             <div className="d-flex flex-column gap-1">
-                                {tasks.map((task) => (
+                                {sortTasks(tasks).map((task) => (
                                         <div key={task.id}
                                              className={`touchable-element task-list-item d-flex justify-content-between align-items-center py-2 px-1 border-bottom rounded-4
                                          ${selectedTask?.id === task.id ? "selected-task" : ""}`}
@@ -280,7 +360,7 @@ export default function ToDoTaskDashboard() {
                                                            taskNameValidationError: ""
                                                        })
                                                    }}
-                                                   className="rounded-5 border-0 my-2 px-3 py-1 w-100"
+                                                   className={`${standardInput} my-2 w-100`}
                                                    placeholder="Task name"/>
                                         </div>
                                         <FormErrorMessage message={editTask.taskNameValidationError}/>
@@ -323,7 +403,7 @@ export default function ToDoTaskDashboard() {
                                     <div className="d-flex flex-column gap-2">
                                         <div className="d-flex justify-content-between align-items-center">
                                             <span className="fw-bold">Task completed as of</span>
-                                            <input className="rounded-5 border-0 px-3 py-1" type="datetime-local"
+                                            <input className={standardInput} type="datetime-local"
                                                    onChange={(e) => setCompletedDate(e.target.value)}
                                                    value={completedDate}/>
                                         </div>
@@ -345,7 +425,8 @@ export default function ToDoTaskDashboard() {
                                 {activeAction === "edit" ? (
                                     <div>
                                         <div className="d-flex justify-content-between align-items-center">
-                                            <label className="d-flex align-items-center gap-2" htmlFor="EditTaskDueDate">
+                                            <label className="d-flex align-items-center gap-2"
+                                                   htmlFor="EditTaskDueDate">
                                                 <MaterialIcon name="calendar_clock"/>
                                                 Due Date
                                             </label>
@@ -357,7 +438,7 @@ export default function ToDoTaskDashboard() {
                                                            dueDateValidationError: ""
                                                        })
                                                    }}
-                                                   className="rounded-5 border-0 px-3 py-1"
+                                                   className={standardInput}
                                                    id="EditTaskDueDate"
                                                    type="datetime-local"/>
                                         </div>
@@ -383,7 +464,9 @@ export default function ToDoTaskDashboard() {
                                 {activeAction === null && (
                                     <div className="d-flex justify-content-between align-items-center py-5">
                                         <div className="d-flex gap-2 text-muted touchable-element"
-                                             onClick={() => {setActiveAction("delete")}}
+                                             onClick={() => {
+                                                 setActiveAction("delete")
+                                             }}
                                         >
                                             <MaterialIcon name="delete"/> Delete
                                         </div>
@@ -460,7 +543,7 @@ export default function ToDoTaskDashboard() {
                                                        taskNameValidationError: ""
                                                    })
                                                }}
-                                               className="rounded-5 border-0 px-3 py-1 "
+                                               className={standardInput}
                                                id="NewTaskName"
                                                placeholder="Task name..."/>
                                     </div>
@@ -480,7 +563,7 @@ export default function ToDoTaskDashboard() {
                                                        })
 
                                                    }}
-                                                   className="rounded-5 border-0 px-3 py-1"
+                                                   className={standardInput}
                                                    id="NewTaskDueDate"
                                                    type="datetime-local"/>
                                         </div>
