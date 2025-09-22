@@ -4,7 +4,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import "./globals.css";
 import Header from "@/components/nav/Header";
 import Footer from "@/components/nav/Footer";
-import BootstrapActivation from "@/components/BootstrapActivation";
+import BootstrapActivation from "@/components/utils/BootstrapActivation";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",

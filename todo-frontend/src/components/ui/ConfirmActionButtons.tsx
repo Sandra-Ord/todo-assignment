@@ -1,4 +1,4 @@
-import DashboardButton from "@/components/DashboardButton";
+import DashboardButton from "@/components/common/DashboardButton";
 
 interface ConfirmActionButtonsProps {
     confirmText: string;

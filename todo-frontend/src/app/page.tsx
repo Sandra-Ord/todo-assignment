@@ -3,13 +3,24 @@
 import {useEffect, useState} from "react";
 import {ITask} from "@/domain/ITask";
 import TaskService from "@/services/TaskService";
-import TaskStatusBadge from "@/components/TaskStatusBadge";
-import DashboardButton from "@/components/DashboardButton";
+import TaskStatusBadge from "@/components/ui/TaskStatusBadge";
+import DashboardButton from "@/components/common/DashboardButton";
 import {formatDate, untilDueDate} from "@/utils/dateFormat";
-import MaterialIcon from "@/components/MaterialIcon";
-import ConfirmActionButtons from "@/components/ConfirmActionButtons";
-import FormErrorMessage from "@/components/FormErrorMessage";
+import MaterialIcon from "@/components/common/MaterialIcon";
+import ConfirmActionButtons from "@/components/ui/ConfirmActionButtons";
+import FormErrorMessage from "@/components/common/FormErrorMessage";
 import {IFilter} from "@/domain/IFilter";
+import CompleteTaskForm from "@/components/CompleteTaskForm";
+import ConfirmActionBlock from "@/components/ui/ConfirmActionBlock";
+import CreateTaskForm from "@/components/CreateTaskForm";
+import {TaskListItem} from "@/components/TaskListItem";
+import FilterMenu from "@/components/FilterMenu";
+import SortMenu from "@/components/SortMenu";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import TaskMetadata from "@/components/ui/TaskMetaData";
+import {IEditableTask} from "@/domain/IEditableTask";
+import MaterialIconLabel from "@/components/common/MaterialIconLabel";
+import EditTaskForm from "@/components/EditTaskForm";
 
 export default function ToDoTaskDashboard() {
     const standardInput = "rounded-5 border-0 px-3 py-1"
@@ -21,14 +32,15 @@ export default function ToDoTaskDashboard() {
     const [sortBy, setSortBy] = useState<"dueAt" | "completedAt" | "createdAt">("dueAt");
     const [completedLast, setCompletedLast] = useState<boolean>(false);
 
+
     const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
-    const [createTask, setCreateTask] = useState({
+    const [createTask, setCreateTask] = useState<IEditableTask>({
         taskName: "",
         taskNameValidationError: "",
         dueDate: "",
         dueDateValidationError: ""
     });
-    const [editTask, setEditTask] = useState({
+    const [editTask, setEditTask] = useState<IEditableTask>({
         taskName: "",
         taskNameValidationError: "",
         dueDate: "",
@@ -207,9 +219,7 @@ export default function ToDoTaskDashboard() {
 
             {/*Dashboard Header*/}
             <h3 className="title border-bottom p-1 pb-2 d-flex align-items-center justify-content-between">
-                <div className="d-flex gap-2 align-items-center">
-                    <MaterialIcon name="add_task"/> To Do Dashboard
-                </div>
+                <MaterialIconLabel name="add_task" label="To Do Dashboard"/>
                 <MaterialIcon name="add" className="touchable-element"
                               onClick={() => {
                                   setSelectedTask(null);
@@ -233,166 +243,28 @@ export default function ToDoTaskDashboard() {
 
                     {/*Sort and Filter*/}
                     <div className="d-flex justify-content-between align-items-center gap-4">
-                        <div className="btn-group">
-                            <span role="button"
-                                  className="dropdown-toggle d-flex align-items-center gap-2 touchable-element"
-                                  data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-                                <MaterialIcon name="sort"/>
-                                <span className="d-md-none d-lg-inline">Sort by</span>
-                            </span>
-                            <ul className="dropdown-menu dropdown-menu-start ">
-                                <li>
-                                    <button className="dropdown-item" type="button"
-                                            onClick={() => setSortBy("dueAt")}>Due Date
-                                    </button>
-                                </li>
-                                <li>
-                                    <button className="dropdown-item" type="button"
-                                            onClick={() => setSortBy("completedAt")}>Completion Date
-                                    </button>
-                                </li>
-                                <li>
-                                    <button className="dropdown-item" type="button"
-                                            onClick={() => setSortBy("createdAt")}>Creation Date
-                                    </button>
-                                </li>
-                                <li>
-                                    <hr className="dropdown-divider"/>
-                                </li>
-                                <li className="dropdown-item">
-                                    <div className="form-check form-switch">
-                                        <input className="form-check-input" type="checkbox" role="switch"
-                                               id="completedTasksLast"
-                                               onChange={(e) => setCompletedLast(e.target.checked)}/>
-                                        <label htmlFor="completedTasksLast">Completed Tasks Last</label>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                        <div className="btn-group">
-                            <span role="button"
-                                  className="dropdown-toggle d-flex align-items-center gap-2 touchable-element"
-                                  data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-                                <span className="d-md-none d-lg-inline">Filter by</span>
-                                <MaterialIcon name="filter_list"/>
-                            </span>
-                            <ul className="dropdown-menu dropdown-menu-end">
-                                <li className="px-3 py-1 dropdown-item">
-                                    <div className="form-check ">
-                                        <input className="form-check-input" type="checkbox"
-                                               checked={filter.completed === true}
-                                               onChange={(e) => {
-                                                   const completed = e.target.checked;
-                                                   setFilter({
-                                                       ...filter,
-                                                       completed: completed
-                                                           ? filter.completed === false
-                                                               ? null
-                                                               : true
-                                                           : filter.completed === true
-                                                               ? null
-                                                               : false
-                                                   });
-                                               }}
-                                               id="completedCheck"
-                                        />
-                                        <label className="form-check-label" htmlFor="completedCheck">
-                                            Completed
-                                        </label>
-                                    </div>
-                                </li>
-
-                                <li className="px-3 py-1 dropdown-item">
-                                    <div className="form-check ">
-                                        <input className="form-check-input" type="checkbox"
-                                               checked={filter.completed === false}
-                                               onChange={(e) => {
-                                                   const uncompleted = e.target.checked;
-                                                   setFilter({
-                                                       ...filter,
-                                                       completed: uncompleted
-                                                           ? filter.completed === true
-                                                               ? null
-                                                               : false
-                                                           : filter.completed === false
-                                                               ? null
-                                                               : true
-                                                   });
-                                               }}
-                                               id="uncompletedCheck"/>
-                                        <label className="form-check-label" htmlFor="uncompletedCheck">
-                                            Not Completed
-                                        </label>
-                                    </div>
-                                </li>
-                                <li className="px-3 py-1">
-                                    <div className="fw-semibold small text-muted mb-2">Due Date Range</div>
-                                    <div className="d-flex flex-column gap-2">
-                                        <div>
-                                            <label htmlFor="DueDateFrom"
-                                                   className="form-label small text-muted">From</label>
-                                            <input
-                                                type="datetime-local"
-                                                id="DueDateFrom"
-                                                className={`${standardInput} w-100 shadow-sm`}
-                                                value={filter.dueDateFrom}
-                                                onChange={(e) => setFilter({...filter, dueDateFrom: e.target.value})}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="DueDateUntil"
-                                                   className="form-label small text-muted">Until</label>
-                                            <input
-                                                type="datetime-local"
-                                                id="DueDateUntil"
-                                                className={`${standardInput} w-100 shadow-sm`}
-                                                value={filter.dueDateUntil}
-                                                onChange={(e) => setFilter({...filter, dueDateUntil: e.target.value})}
-                                            />
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
+                        <SortMenu sortBy={sortBy} setSortBy={setSortBy} completedLast={completedLast}
+                                  setCompletedLast={setCompletedLast}/>
+                        <FilterMenu filter={filter} setFilter={setFilter}/>
                     </div>
 
                     {/*Task List*/}
                     <div className="flex-grow-1 overflow-auto vh-100">
 
                         {isLoading ? (
-                            <div className="d-flex align-items-center justify-content-center">
-                                <div className="spinner-border"></div>
-                            </div>
+                            <LoadingSpinner/>
                         ) : (
                             <div className="d-flex flex-column gap-1">
                                 {sortTasks(tasks).map((task) => (
-                                        <div key={task.id}
-                                             className={`touchable-element task-list-item d-flex justify-content-between align-items-center py-2 px-1 border-bottom rounded-4
-                                         ${selectedTask?.id === task.id ? "selected-task" : ""}`}
-                                             onClick={() => {
-                                                 setSelectedTask(task);
-                                                 setActiveAction(null);
-                                             }}>
-                                            <div className="d-flex gap-2 align-items-center">
-                                                <span className="material-symbols-outlined"
-                                                      onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          setSelectedTask(task);
-                                                          setActiveAction("complete");
-                                                          setCompletedDate(new Date().toISOString().slice(0, 16));
-                                                      }}
-                                                >
-                                                    {task.completedAt ? "check_box" : "check_box_outline_blank"}
-                                                </span>
-                                                <span>
-                                                    <div>{task.taskName}</div>
-                                                    <div className="text-muted small">
-                                                        Due {formatDate(task.dueAt)}
-                                                    </div>
-                                                </span>
-                                            </div>
-                                            <TaskStatusBadge dueAt={task.dueAt} completedAt={task.completedAt}/>
-                                        </div>
+                                        <TaskListItem
+                                            key={task.id}
+                                            task={task}
+                                            selectedTask={selectedTask}
+                                            setSelectedTask={setSelectedTask}
+                                            setActiveAction={setActiveAction}
+                                            setCompletedDate={setCompletedDate}
+                                            formatDate={formatDate}
+                                        />
                                     )
                                 )}
                             </div>
@@ -406,252 +278,111 @@ export default function ToDoTaskDashboard() {
                 <div className="col-12 col-md-7 order-1 p-2 border-bottom">
 
                     {selectedTask ? (
+                        <>
 
-                        <div>
+                            {activeAction == "edit" ? (
+                                <EditTaskForm editTask={editTask} setEditTask={setEditTask} selectedTask={selectedTask}
+                                              onConfirm={handleEditTask}
+                                              onCancel={() => setActiveAction(null)}
+                                              standardInputClassnames={standardInput}/>
+                            ) : (
+                                <>
+                                    <div className="border-bottom p-2">
 
-                            <div className="border-bottom p-2">
+                                        <h2 className="title d-flex align-items-center justify-content-between">
+                                            <div className="d-flex gap-2 align-items-center">
+                                                <MaterialIcon
+                                                    name={selectedTask.completedAt ? "check_box" : "check_box_outline_blank"}
+                                                    className="touchable-element"
+                                                    onClick={() => {
+                                                        setActiveAction(activeAction === "complete" ? null : "complete");
+                                                        setCompletedDate(new Date().toISOString().slice(0, 16));
+                                                    }}/>
+                                                {selectedTask.taskName}
+                                            </div>
+                                            <MaterialIcon name="close"
+                                                          className="touchable-element"
+                                                          onClick={() => {
+                                                              setSelectedTask(null);
+                                                              setActiveAction(null);
+                                                          }}/>
+                                        </h2>
+                                        <TaskMetadata task={selectedTask}/>
 
-                                {activeAction === "edit" ? (
-                                    <div>
-                                        <div className="d-flex align-items-center">
-                                            <input value={editTask.taskName}
-                                                   onChange={(e) => {
-                                                       setEditTask({
-                                                           ...editTask,
-                                                           taskName: e.target.value,
-                                                           taskNameValidationError: ""
-                                                       })
-                                                   }}
-                                                   className={`${standardInput} my-2 w-100`}
-                                                   placeholder="Task name"/>
-                                        </div>
-                                        <FormErrorMessage message={editTask.taskNameValidationError}/>
                                     </div>
-                                ) : (
-                                    <h2 className="title d-flex align-items-center justify-content-between">
-                                        <div className="d-flex gap-2 align-items-center">
-                                            <MaterialIcon
-                                                name={selectedTask.completedAt ? "check_box" : "check_box_outline_blank"}
-                                                className="touchable-element"
-                                                onClick={() => {
-                                                    setActiveAction(activeAction === "complete" ? null : "complete");
-                                                    setCompletedDate(new Date().toISOString().slice(0, 16));
-                                                }}/>
-                                            {selectedTask.taskName}
-                                        </div>
-                                        <MaterialIcon name="close"
-                                                      className="touchable-element"
-                                                      onClick={() => {
-                                                          setSelectedTask(null);
-                                                          setActiveAction(null);
-                                                      }}/>
-                                    </h2>
-                                )}
+                                    <div className="p-2 d-flex flex-column gap-2">
 
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <span className="text-muted"
-                                          data-toggle="tooltip" data-placement="right" title="19.09.2024 23:59">
-                                                      Created at{" "}
-                                        {formatDate(selectedTask.createdAt)}
-                                    </span>
-                                    <TaskStatusBadge dueAt={selectedTask.dueAt} completedAt={selectedTask.completedAt}/>
+                                        {activeAction === "complete" && (
+                                            <CompleteTaskForm
+                                                standardInputClassnames={standardInput}
+                                                completedDate={completedDate}
+                                                setCompletedDate={setCompletedDate}
+                                                onConfirm={() => handleCompleteTask(selectedTask.id)}
+                                                onCancel={() => setActiveAction(null)}
+                                            />
+                                        )}
+
+                                        <div className="d-flex gap-2">
+                                            <MaterialIconLabel name={"calendar_clock"}
+                                                               label={`Due ${formatDate(selectedTask.dueAt)}`}/>
+                                            <span className="text-muted">{untilDueDate(selectedTask.dueAt)}</span>
+                                        </div>
+
+                                        {selectedTask.completedAt && (
+                                            <MaterialIconLabel name="event_available"
+                                                               label={`Completed at ${formatDate(selectedTask.completedAt)}`}/>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+
+                            {activeAction === null && (
+                                <div className="d-flex justify-content-between align-items-center py-5">
+                                    <MaterialIconLabel label="Delete" name="delete" className='text-muted'
+                                                       onClick={() => {
+                                                           setActiveAction("delete")
+                                                       }}/>
+
+                                    <MaterialIconLabel label="Edit" name="edit"
+                                                       className="flex-row-reverse text-muted" onClick={() => {
+                                        setActiveAction("edit");
+                                        setEditTask({
+                                            taskName: selectedTask?.taskName,
+                                            taskNameValidationError: "",
+                                            dueDate: selectedTask?.dueAt,
+                                            dueDateValidationError: ""
+                                        });
+                                    }}/>
                                 </div>
+                            )}
 
-                            </div>
+                            {activeAction === "delete" && (
+                                <ConfirmActionBlock
+                                    message="Are you sure you want to delete this task?"
+                                    confirmText="Delete" confirmIcon="delete" confirmClass="danger"
+                                    onConfirm={() => handleDeleteTask(selectedTask.id)}
+                                    onCancel={() => setActiveAction(null)}
+                                />
+                            )}
 
-                            <div className="p-2 d-flex flex-column gap-2">
-
-                                {activeAction === "complete" && (
-                                    <div className="d-flex flex-column gap-2">
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <span className="fw-bold">Task completed as of</span>
-                                            <input className={standardInput} type="datetime-local"
-                                                   onChange={(e) => setCompletedDate(e.target.value)}
-                                                   value={completedDate}/>
-                                        </div>
-                                        <ConfirmActionButtons confirmText="Complete"
-                                                              confirmIcon="check_box"
-                                                              confirmClass="success"
-                                                              onConfirm={() => handleCompleteTask(selectedTask.id)}
-                                                              onCancel={() => setActiveAction(null)}/>
-                                    </div>
-                                )}
-
-                                <div>
-                                    This is a placeholder text for a task which may or may not have some additional text
-                                    as
-                                    its description. this has not yet been added to the data model and is a to do for
-                                    now.
-                                </div>
-
-                                {activeAction === "edit" ? (
-                                    <div>
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <label className="d-flex align-items-center gap-2"
-                                                   htmlFor="EditTaskDueDate">
-                                                <MaterialIcon name="calendar_clock"/>
-                                                Due Date
-                                            </label>
-                                            <input value={editTask.dueDate}
-                                                   onChange={(e) => {
-                                                       setEditTask({
-                                                           ...editTask,
-                                                           dueDate: e.target.value,
-                                                           dueDateValidationError: ""
-                                                       })
-                                                   }}
-                                                   className={standardInput}
-                                                   id="EditTaskDueDate"
-                                                   type="datetime-local"/>
-                                        </div>
-                                        <FormErrorMessage message={editTask.dueDateValidationError}/>
-                                    </div>
-                                ) : (
-                                    <div className="d-flex align-items-center gap-2">
-                                        <MaterialIcon name="calendar_clock"/>
-                                        Due{" "}
-                                        {formatDate(selectedTask.dueAt)}
-                                        <span className="text-muted">{untilDueDate(selectedTask.dueAt)}</span>
-                                    </div>
-                                )}
-
-                                {selectedTask.completedAt && (
-                                    <div className="d-flex align-items-center gap-2">
-                                        <MaterialIcon name="event_available"/>
-                                        Completed at {formatDate(selectedTask.completedAt)}
-                                    </div>
-                                )}
-
-
-                                {activeAction === null && (
-                                    <div className="d-flex justify-content-between align-items-center py-5">
-                                        <div className="d-flex gap-2 text-muted touchable-element"
-                                             onClick={() => {
-                                                 setActiveAction("delete")
-                                             }}
-                                        >
-                                            <MaterialIcon name="delete"/> Delete
-                                        </div>
-
-                                        <div className="d-flex gap-2 text-muted touchable-element"
-                                             onClick={() => {
-                                                 setActiveAction("edit");
-                                                 setEditTask({
-                                                     taskName: selectedTask?.taskName,
-                                                     taskNameValidationError: "",
-                                                     dueDate: selectedTask?.dueAt,
-                                                     dueDateValidationError: ""
-                                                 });
-                                             }}
-                                        >
-                                            Edit <MaterialIcon name="edit"/>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {activeAction === "delete" && (
-                                    <div className="d-flex flex-column gap-4 py-5">
-                                        <div className="text-center text-muted">
-                                            Are you sure you want to delete this task?
-                                        </div>
-                                        <ConfirmActionButtons confirmText="Delete"
-                                                              confirmIcon="delete"
-                                                              confirmClass="danger"
-                                                              onConfirm={() => handleDeleteTask(selectedTask.id)}
-                                                              onCancel={() => setActiveAction(null)}/>
-                                    </div>
-                                )}
-
-                                {activeAction === "edit" && (
-                                    <div className="d-flex flex-column gap-4 py-5">
-                                        <div className="text-center text-muted">
-                                            Save changes?
-                                        </div>
-                                        <ConfirmActionButtons confirmText="Save"
-                                                              confirmIcon="edit"
-                                                              confirmClass="warning"
-                                                              onConfirm={() => handleEditTask()}
-                                                              onCancel={() => setActiveAction(null)}/>
-                                    </div>
-                                )}
-
-                            </div>
-
-                        </div>
-
+                        </>
                     ) : activeAction === "create" ? (
-
-                        <div>
-
-                            <h2 className="title p-2 border-bottom d-flex align-items-center justify-content-between">
-                                Create a New Task
-                                <MaterialIcon name="close" className="touchable-element"
-                                              onClick={() => {
-                                                  setSelectedTask(null);
-                                                  setActiveAction(null);
-                                              }}/>
-                            </h2>
-
-                            <div className="p-2 pt-3 d-flex flex-column gap-3">
-
-                                <div>
-                                    <div className="d-flex justify-content-between align-items-center gap-4">
-                                        <label htmlFor="NewTaskName">Task name</label>
-                                        <input value={createTask.taskName}
-                                               onChange={(e) => {
-                                                   setCreateTask({
-                                                       ...createTask,
-                                                       taskName: e.target.value,
-                                                       taskNameValidationError: ""
-                                                   })
-                                               }}
-                                               className={standardInput}
-                                               id="NewTaskName"
-                                               placeholder="Task name..."/>
-                                    </div>
-                                    <FormErrorMessage message={createTask.taskNameValidationError}/>
-                                </div>
-
-                                <div>
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <label htmlFor="NewTaskDueDate">Due date</label>
-                                        <div>
-                                            <input value={createTask.dueDate}
-                                                   onChange={(e) => {
-                                                       setCreateTask({
-                                                           ...createTask,
-                                                           dueDate: e.target.value,
-                                                           dueDateValidationError: ""
-                                                       })
-
-                                                   }}
-                                                   className={standardInput}
-                                                   id="NewTaskDueDate"
-                                                   type="datetime-local"/>
-                                        </div>
-                                    </div>
-                                    <FormErrorMessage message={createTask.dueDateValidationError}/>
-                                </div>
-
-                                <div className="d-flex justify-content-center">
-                                    <DashboardButton text="Create" icon="add_circle" className="primary"
-                                                     onClick={() => handleCreateTask()}/>
-                                </div>
-
-                            </div>
-
-                        </div>
-                    ) : (
-                        <div
-                            className="title touchable-element d-flex flex-column h-100 gap-2 justify-content-center align-items-center"
-                            onClick={() => {
+                        <CreateTaskForm
+                            standardInputClassnames={standardInput}
+                            createTask={createTask}
+                            setCreateTask={setCreateTask}
+                            handleCreateTask={handleCreateTask}
+                            onClose={() => {
                                 setSelectedTask(null);
-                                setActiveAction("create");
-                            }}
-                        >
-                            Add a new task to do
-                            <MaterialIcon name="add_circle"/>
-                        </div>
+                                setActiveAction(null);
+                            }}/>
+                    ) : (
+                        <MaterialIconLabel label="Add a new task to do" name="add_circle"
+                                           className='title flex-column h-100 justify-content-center'
+                                           onClick={() => {
+                                               setSelectedTask(null);
+                                               setActiveAction("create");
+                                           }}/>
                     )}
                 </div>
 
