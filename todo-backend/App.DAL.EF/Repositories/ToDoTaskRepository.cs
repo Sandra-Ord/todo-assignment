@@ -12,6 +12,11 @@ public class ToDoTaskRepository : BaseEntityRepository<ToDoTask, AppDbContext>, 
     {
     }
 
+    public async Task<IEnumerable<ToDoTask>> GetTasks()
+    {
+        return await RepoDbSet.OrderBy(t => t.DueAt).ToListAsync();
+    }
+
     public ToDoTask CompleteTask(int id, DateTime? completedAt)
     {
         var taskEntity = RepoDbSet.FirstOrDefault(e => e.Id == id);

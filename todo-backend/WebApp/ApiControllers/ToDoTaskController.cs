@@ -27,7 +27,7 @@ public class ToDoTaskController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ToDoTask>>> GetToDoTasks()
     {
-        return Ok(await _uow.ToDoTasks.GetAllAsync());
+        return Ok(await _uow.ToDoTasks.GetTasks());
     }
 
     // GET: api/ToDoTask/5
@@ -161,6 +161,7 @@ public class ToDoTaskController : ControllerBase
         return NoContent();
     }
 
+    // GET: api/filter
     [HttpGet("filter")]
     public async Task<ActionResult<IEnumerable<ToDoTask>>> GetFilteredTasksAsync([FromQuery] TaskFilter filter)
     {

@@ -12,8 +12,6 @@ public abstract class BaseEntityRepository<TEntity, TDbContext> :
     public BaseEntityRepository(TDbContext dbContext) : base(dbContext)
     {
     }
-
-
 }
 
 public  abstract class BaseEntityRepository<TKey, TEntity, TDbContext> : IEntityRepository<TEntity, TKey>

@@ -2,7 +2,6 @@
 
 public interface IDomainAppUserId : IDomainAppUserId<int>
 {
-    
 }
 
 public interface IDomainAppUserId<TKey>

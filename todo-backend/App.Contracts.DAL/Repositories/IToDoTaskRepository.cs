@@ -8,6 +8,8 @@ public interface IToDoTaskRepository : IEntityRepository<ToDoTask>
 {
     // Custom DAL method definitions
     
+    Task<IEnumerable<ToDoTask>> GetTasks();
+    
     ToDoTask CompleteTask(int id, DateTime? completedAt);
     
     ToDoTask UnCompleteTask(int id);

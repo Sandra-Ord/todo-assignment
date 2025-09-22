@@ -3,12 +3,12 @@ import {ITask} from "@/domain/ITask";
 import {IResponse} from "@/domain/IResultObject";
 import {IFilter} from "@/domain/IFilter";
 
-
 export default class TaskService {
+
     private constructor() {}
 
     private static httpClient = axios.create({
-        baseURL: "http://localhost:5221/api/ToDoTask/",
+        baseURL: process.env.NEXT_PUBLIC_BACKEND_URL + "/api/ToDoTask/",
     })
 
     // [GET] /api/ToDoTask
@@ -193,5 +193,4 @@ export default class TaskService {
             };
         }
     }
-
 }

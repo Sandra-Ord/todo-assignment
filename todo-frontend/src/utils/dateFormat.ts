@@ -10,7 +10,7 @@ export function formatDate(dateString: string): string {
 export function untilDueDate(dateString: string) {
     const now = new Date();
     const due = new Date(dateString);
-    let difference = due - now;
+    const difference = due - now;
 
     if (difference <= 0) {
         return "(overdue)";
