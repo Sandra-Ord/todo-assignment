@@ -1,5 +1,8 @@
 # Developer Test Assignment
 
+**Assignment from:** Helmes  
+**Completed by:** Sandra Örd
+
 ## Application
 The application provides the user basic task management functionality:
 * Create
@@ -11,7 +14,7 @@ The application provides the user basic task management functionality:
 * Search
 
 ## Project Structure
-This project contains two main parts?
+This project contains two parts:
 - **Backend**: ASP.NET Core Web API (`todo-backend)
 - **Frontend**: Next.js React application (`todo-frontend)
 
@@ -23,7 +26,7 @@ This project contains two main parts?
     - Chosen for fast development, server-side rendering, and component-based UI.
 - **Bootstrap + Material Icons**: Provides a clean UI with minimal custom styling.
 
-## Prerequisities
+## Prerequisites
 
 Before running, ensure you have installed:
 - [.NET SDK 8+](https://dotnet.microsoft.com/en-us/download)
