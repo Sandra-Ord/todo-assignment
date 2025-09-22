@@ -66,20 +66,16 @@ Now listening on: http://localhost:5221
 
 Open another terminal.
 
-Navigate back to the repository level of the project (todo-assignment).
-
-```bash
-cd ../..
-```
+Navigate to the repository level of the project (todo-assignment).
 
 ```bash
 # Navigate to the frontend
 cd todo-frontend
-# Set the backend url environment variable
-# e.g. NEXT_PUBLIC_BACKEND_URL=http://localhost:5221
-NEXT_PUBLIC_BACKEND_URL=[Backend link from before]
 # Install dependencies
 npm install
+# Set the backend url environment variable
+# e.g. export NEXT_PUBLIC_BACKEND_URL=http://localhost:5221
+export NEXT_PUBLIC_BACKEND_URL=[Backend link from before]
 # Start the development server
 npm run dev
 ```
