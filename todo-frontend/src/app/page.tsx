@@ -28,25 +28,12 @@ export default function ToDoTaskDashboard() {
     const [isLoading, setIsLoading] = useState(true);
 
     const [tasks, setTasks] = useState<ITask[]>([]);
+    const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
+    const [activeAction, setActiveAction] = useState<"create" | "complete" | "delete" | "edit" | null>(null);
 
+    // Filter/Sort States
     const [sortBy, setSortBy] = useState<"dueAt" | "completedAt" | "createdAt">("dueAt");
     const [completedLast, setCompletedLast] = useState<boolean>(false);
-
-
-    const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
-    const [createTask, setCreateTask] = useState<IEditableTask>({
-        taskName: "",
-        taskNameValidationError: "",
-        dueDate: "",
-        dueDateValidationError: ""
-    });
-    const [editTask, setEditTask] = useState<IEditableTask>({
-        taskName: "",
-        taskNameValidationError: "",
-        dueDate: "",
-        dueDateValidationError: ""
-    });
-
     const [filter, setFilter] = useState<IFilter>({
         completed: null,
         search: "",
@@ -54,13 +41,17 @@ export default function ToDoTaskDashboard() {
         dueDateUntil: ""
     });
 
+    // Create/Edit/Complete Task States
     const [completedDate, setCompletedDate] = useState("");
-
-    const [activeAction, setActiveAction] = useState<"create" | "complete" | "delete" | "edit" | null>(null);
-
-    const [validationError, setValidationError] = useState("");
+    const [formTask, setFormTask] = useState<IEditableTask>({
+        taskName: "",
+        taskNameValidationError: "",
+        dueDate: "",
+        dueDateValidationError: ""
+    });
 
     const loadTasks = async () => {
+        setIsLoading(true);
         const response = await TaskService.getTasks();
         if (response.data) {
             setTasks(response.data);
@@ -110,64 +101,37 @@ export default function ToDoTaskDashboard() {
         }
     };
 
-    const handleCreateTask = async () => {
-        const updatedTask = {...createTask};
+    function validateTask(task: IEditableTask): IEditableTask {
+        const updated = {...task};
+        updated.taskNameValidationError = task.taskName ? "" : "Task name is required!";
+        updated.dueDateValidationError = task.dueDate ? "" : "Due date is required!";
+        return updated;
+    }
 
-        if (!createTask.taskName) {
-            updatedTask.taskNameValidationError = "Task name is required!";
-        }
-        if (!createTask.dueDate) {
-            updatedTask.dueDateValidationError = "Due date is required!";
-        }
-        if (createTask.taskName.length < 1 || createTask.dueDate.length < 1) {
-            setCreateTask(updatedTask);
+    const handleSubmitTask = async () => {
+        const validated = validateTask(formTask);
+        if (validated.taskNameValidationError || validated.dueDateValidationError) {
+            setFormTask(validated);
             return;
         }
 
-        const response = await TaskService.createTask(createTask.taskName, createTask.dueDate);
+        let response;
+        if (selectedTask && activeAction === "edit") {
+            response = await TaskService.editTask(selectedTask.id, formTask.taskName, formTask.dueDate);
+        } else if (!selectedTask && activeAction === "create") {
+            response = await TaskService.createTask(formTask.taskName, formTask.dueDate);
+        } else {
+            return;
+        }
 
-        if (response.data) {
-            setSelectedTask(response.data);
+        if (!response.errors) {
+            setSelectedTask(response.data!);
             setActiveAction(null);
-            setCreateTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
-            tasks.push(response.data);
+            setFormTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
+            await loadTasks();
+        } else {
+            console.error("Failed to submit task", response.errors);
         }
-        if (response.errors && response.errors.length > 0) {
-            setValidationError(response.errors[0]);
-        }
-    }
-
-    const handleEditTask = async () => {
-
-        if (selectedTask) {
-            const updatedTask = {...editTask};
-
-            if (editTask.taskName.length < 1) {
-                updatedTask.taskNameValidationError = "Task name is required!";
-            }
-            if (editTask.dueDate.length < 1) {
-                updatedTask.dueDateValidationError = "Due date is required!";
-            }
-            if (editTask.taskName.length < 1 || editTask.dueDate.length < 1) {
-                setEditTask(updatedTask);
-                return;
-            }
-
-            const response = await TaskService.editTask(selectedTask.id, editTask.taskName, editTask.dueDate);
-            if (!response.errors) {
-                console.log(response);
-                setSelectedTask(response.data!);
-                setActiveAction(null);
-                setEditTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
-                // todo update value in tasks
-            }
-
-            if (response.errors && response.errors.length > 0) {
-                setValidationError(response.errors[0]);
-            }
-        }
-
-
     }
 
     const handleDeleteTask = async (taskId: string) => {
@@ -190,7 +154,6 @@ export default function ToDoTaskDashboard() {
                 setSelectedTask(response.data!);
                 setActiveAction(null);
             }
-
         } else {
             console.error("Failed to complete task", response.errors);
         }
@@ -212,9 +175,7 @@ export default function ToDoTaskDashboard() {
         loadTasks();
     }, []);
 
-
     return (
-
         <div className="p-4 my-3 dashboard">
 
             {/*Dashboard Header*/}
@@ -222,11 +183,11 @@ export default function ToDoTaskDashboard() {
                 <MaterialIconLabel name="add_task" label="To Do Dashboard"/>
                 <MaterialIcon name="add" className="touchable-element"
                               onClick={() => {
+                                  setFormTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
                                   setSelectedTask(null);
                                   setActiveAction("create");
                               }}/>
             </h3>
-
 
             <div className="d-flex flex-wrap flex-row-reverse p-2">
 
@@ -250,7 +211,6 @@ export default function ToDoTaskDashboard() {
 
                     {/*Task List*/}
                     <div className="flex-grow-1 overflow-auto vh-100">
-
                         {isLoading ? (
                             <LoadingSpinner/>
                         ) : (
@@ -269,7 +229,6 @@ export default function ToDoTaskDashboard() {
                                 )}
                             </div>
                         )}
-
                     </div>
 
                 </div>
@@ -281,25 +240,24 @@ export default function ToDoTaskDashboard() {
                         <>
 
                             {activeAction == "edit" ? (
-                                <EditTaskForm editTask={editTask} setEditTask={setEditTask} selectedTask={selectedTask}
-                                              onConfirm={handleEditTask}
-                                              onCancel={() => setActiveAction(null)}
+                                <EditTaskForm editTask={formTask} setEditTask={setFormTask} selectedTask={selectedTask}
+                                              onConfirm={handleSubmitTask}
+                                              onCancel={() => {
+                                                  setFormTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
+                                                  setActiveAction(null);
+                                              }}
                                               standardInputClassnames={standardInput}/>
                             ) : (
                                 <>
+                                    {/*Task Detail View Header*/}
                                     <div className="border-bottom p-2">
-
                                         <h2 className="title d-flex align-items-center justify-content-between">
-                                            <div className="d-flex gap-2 align-items-center">
-                                                <MaterialIcon
-                                                    name={selectedTask.completedAt ? "check_box" : "check_box_outline_blank"}
-                                                    className="touchable-element"
-                                                    onClick={() => {
-                                                        setActiveAction(activeAction === "complete" ? null : "complete");
-                                                        setCompletedDate(new Date().toISOString().slice(0, 16));
-                                                    }}/>
-                                                {selectedTask.taskName}
-                                            </div>
+                                            <MaterialIconLabel
+                                                name={selectedTask.completedAt ? "check_box" : "check_box_outline_blank"}
+                                                label={selectedTask.taskName} onClick={() => {
+                                                setActiveAction(activeAction === "complete" ? null : "complete");
+                                                setCompletedDate(new Date().toISOString().slice(0, 16));
+                                            }}/>
                                             <MaterialIcon name="close"
                                                           className="touchable-element"
                                                           onClick={() => {
@@ -308,8 +266,8 @@ export default function ToDoTaskDashboard() {
                                                           }}/>
                                         </h2>
                                         <TaskMetadata task={selectedTask}/>
-
                                     </div>
+                                    {/*Task Detail Information*/}
                                     <div className="p-2 d-flex flex-column gap-2">
 
                                         {activeAction === "complete" && (
@@ -336,6 +294,7 @@ export default function ToDoTaskDashboard() {
                                 </>
                             )}
 
+                            {/*Select Action Bar (edit/delete)*/}
                             {activeAction === null && (
                                 <div className="d-flex justify-content-between align-items-center py-5">
                                     <MaterialIconLabel label="Delete" name="delete" className='text-muted'
@@ -346,7 +305,7 @@ export default function ToDoTaskDashboard() {
                                     <MaterialIconLabel label="Edit" name="edit"
                                                        className="flex-row-reverse text-muted" onClick={() => {
                                         setActiveAction("edit");
-                                        setEditTask({
+                                        setFormTask({
                                             taskName: selectedTask?.taskName,
                                             taskNameValidationError: "",
                                             dueDate: selectedTask?.dueAt,
@@ -364,15 +323,15 @@ export default function ToDoTaskDashboard() {
                                     onCancel={() => setActiveAction(null)}
                                 />
                             )}
-
                         </>
                     ) : activeAction === "create" ? (
                         <CreateTaskForm
                             standardInputClassnames={standardInput}
-                            createTask={createTask}
-                            setCreateTask={setCreateTask}
-                            handleCreateTask={handleCreateTask}
+                            createTask={formTask}
+                            setCreateTask={setFormTask}
+                            handleCreateTask={handleSubmitTask}
                             onClose={() => {
+                                setFormTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
                                 setSelectedTask(null);
                                 setActiveAction(null);
                             }}/>
@@ -380,6 +339,7 @@ export default function ToDoTaskDashboard() {
                         <MaterialIconLabel label="Add a new task to do" name="add_circle"
                                            className='title flex-column h-100 justify-content-center'
                                            onClick={() => {
+                                               setFormTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
                                                setSelectedTask(null);
                                                setActiveAction("create");
                                            }}/>

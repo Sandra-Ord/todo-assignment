@@ -8,7 +8,13 @@ interface MaterialIconLabelProps {
     onClick?: () => void;
 }
 
-export default function MaterialIconLabel({name, label, className = "", spanClassName = "", onClick}: MaterialIconLabelProps) {
+export default function MaterialIconLabel({
+                                              name,
+                                              label,
+                                              className = "",
+                                              spanClassName = "",
+                                              onClick
+                                          }: MaterialIconLabelProps) {
     const containerClasses = `d-flex align-items-center gap-2 ${onClick ? "touchable-element" : ""} ${className}`.trim();
 
     return (
@@ -16,5 +22,5 @@ export default function MaterialIconLabel({name, label, className = "", spanClas
             <MaterialIcon name={name}/>
             <span className={spanClassName}>{label}</span>
         </span>
-);
+    );
 }

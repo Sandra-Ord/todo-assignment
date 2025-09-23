@@ -15,85 +15,79 @@ The application provides the user basic task management functionality:
 
 ## Project Structure
 This project contains two parts:
-- **Backend**: ASP.NET Core Web API (`todo-backend)
-- **Frontend**: Next.js React application (`todo-frontend)
+- **Backend**: ASP.NET Core Web API ([`todo-backend`](./todo-backend))
+- **Frontend**: Next.js React application ([`todo-frontend`](./todo-frontend))
 
 ## Technologies
 
 - **Backend**: ASP.NET Core Web API
     - Chosen for strong typing, LINQ support, and good tooling for REST APIs.
 - **Frontend**: Next.js (React) with TypeScript
-    - Chosen for fast development, server-side rendering, and component-based UI.
-- **Bootstrap + Material Icons**: Provides a clean UI with minimal custom styling.
+    - Chosen for fast development and a modular component-based architecture.
+- **Bootstrap + Material Icons**: Provides a clean, responsive UI with minimal custom styling.
 
 ## Prerequisites
 
 Before running, ensure you have installed:
 - [.NET SDK 8+](https://dotnet.microsoft.com/en-us/download)
 - [Node.js 18+](https://nodejs.org/)
-- `npm` (comes with Node.js)
 
 ## Running the Application
 
-### Start the Backend
+### Backend
 
-Open a terminal.
+1. Open a terminal and navigate to the backend project.
+    ```bash
+    cd todo-assignment/todo-backend
+    ```
+2. Navigate to the web application project.
+    ```bash
+    cd webapp
+    ```
+3. Restore dependencies.
+    ```bash
+    dotnet restore
+    ```
+4. Build and run the project.
+    ```bash
+    dotnet run
+    ```
+5. Take note of the output URL (e.g. http://localhost:5221).
+    ```bash
+    Building...
+    info: Microsoft.Hosting.Lifetime[14]
+    Now listening on: http://localhost:5221
+    ```
+    The URL will be used to configure the frontend.
 
-Navigate to the repository level of the project (todo-assignment).
+### Frontend
 
-```bash
-# Navigate to the WebApp project
-cd todo-backend/webapp
-# Restore dotnet
-dotnet restore
-# Build and run the project
-dotnet run
-```
-
-Pay attention to the output of the `dotnet run` command.
-
-```bash
-Building...
-info: Microsoft.Hosting.Lifetime[14]
-Now listening on: http://localhost:5221
-```
-
-**Save the url** for later use.
-
-
-
-### Start the Frontend
-
-Open another terminal.
-
-Navigate to the repository level of the project (todo-assignment).
-
-```bash
-# Navigate to the frontend
-cd todo-frontend
-# Install dependencies
-npm install
-# Set the backend url environment variable
-# e.g. export NEXT_PUBLIC_BACKEND_URL=http://localhost:5221
-export NEXT_PUBLIC_BACKEND_URL=[Backend link from before]
-# Start the development server
-npm run dev
-```
-
-Pay attention to the output of the `npm run dev` command.
-
-```bash
-> todo-frontend@0.1.0 dev
-> next dev --turbopack
-
- Port 3000 is in use by process 27060, using available port 3001 instead.
-   Next.js 15.5.3 (Turbopack)
-   - Local:        http://localhost:3001
-   - Network:      http://192.168.1.109:3001
-
-```
-
-Navigate to the Local url provided to reach the application.
+1. Open another terminal and navigate to the frontend project.
+    ```bash
+    cd todo-assignment/todo-frontend
+    ```
+2. Install dependencies.
+    ```bash
+    npm install
+    ```
+3. Set the backend URL environment variable.
+    ```bash
+    ## Use the URL from the backend output.
+    ## e.g. export NEXT_PUBLIC_BACKEND_URL=http://localhost:5221
+    export NEXT_PUBLIC_BACKEND_URL=[Backend URL]
+    ```
+4. Start the development server.
+    ```bash
+    npm run dev
+    ```
+5. Take note of the output for the local URL (e.g. http://localhost:3000).
+    ```bash
+    Next.js 15.5.3 (Turbopack)
+    - Local:        http://localhost:3000
+    - Network:      http://10.224.32.125:3000
+    - Environments: .env
+    ```
+6. Open the local URL in your browser to access the application.
 
 ### Notes
 
