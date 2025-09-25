@@ -1,6 +1,7 @@
-import axios from "axios";
 import {ITask} from "@/domain/ITask";
 import {IResponse} from "@/domain/IResultObject";
+import {IRequestOptions} from "@/domain/IRequestOptions";
+import {TaskFilterValues} from "@/domain/TaskEnums";
 import {IFilter} from "@/domain/IFilter";
 import {request} from "@/services/ApiClient";
 
@@ -8,13 +9,15 @@ export default class TaskService {
 
     private constructor() {}
 
-    private static httpClient = axios.create({
-        baseURL: process.env.NEXT_PUBLIC_BACKEND_URL + "/api/ToDoTask/",
-    })
+    private static CONTROLLER = "ToDoTask";
+
+    private static call<T>(options: Omit<IRequestOptions, 'controller'>): Promise<IResponse<T>> {
+        return request<T>({...options, controller: TaskService.CONTROLLER});
+    }
 
     // GET: api/ToDoTask
     static async getTasks() : Promise<IResponse<ITask[]>>{
-        return request<ITask[]>('get', '');
+        return TaskService.call<ITask[]>({method: 'get', endpoint: ''});
     }
 
     // POST: api/ToDoTask
@@ -25,8 +28,7 @@ export default class TaskService {
             createdAt: new Date().toISOString(),
             dueAt: dueDate
         }
-
-        return request<ITask>('post', '', taskData);
+        return TaskService.call<ITask>({method: 'post', endpoint: '', data: taskData});
     }
 
     // PUT: api/ToDoTask/{id}
@@ -36,49 +38,37 @@ export default class TaskService {
             taskName: taskName,
             dueAt: dueDate
         }
-
-        return request<ITask>('put', `${id}`, taskData);
+        return TaskService.call<ITask>({method: 'put', endpoint: `${id}`, data: taskData});
     }
 
     // POST: api/ToDoTask/{id}/complete
     static async completeTask(id:string, completedDate: string) : Promise<IResponse<ITask>> {
-        return request<ITask>('post', `${id}/complete`, { completedAt: completedDate });
+        return TaskService.call<ITask>({method: 'post', endpoint: `${id}/complete`, data: { completedAt: completedDate }});
     }
 
     // POST: api/ToDoTask/{id}/uncomplete
     static async uncompleteTask(id:string) : Promise<IResponse<ITask>> {
-        return request<ITask>('post', `${id}/uncomplete`);
+        return TaskService.call<ITask>({method: 'post', endpoint: `${id}/uncomplete`});
     }
 
     // DELETE: api/ToDoTask/{id}
     static async deleteTask(taskId: string) : Promise<IResponse<ITask>> {
-        return request<ITask>('delete', `${taskId}`);
+        return TaskService.call<ITask>({method: 'delete', endpoint: `${taskId}`});
     }
 
     // GET: api/filter
     static async getFilteredTasks(filter: IFilter): Promise<IResponse<ITask[]>> {
-        const params: Record<string, any> = {};
+        return TaskService.call<ITask[]>({method: 'get', endpoint: 'filter', params: TaskService.buildFilterParams(filter)});
+    }
 
-        if (filter.completed !== null && filter.completed !== undefined) {
-            params.completed = filter.completed;
-        }
+    private static buildFilterParams(filter: IFilter): Record<string, TaskFilterValues> {
+        const params: Record<string, TaskFilterValues> = {};
 
-        if (filter.search && filter.search.trim().length > 0) {
-            params.search = filter.search.trim();
-        }
+        if (typeof filter.completed === "boolean") params.completed = filter.completed;
+        if (filter.search?.trim()) params.search = filter.search.trim();
+        if (filter.dueDateFrom) params.dueDateFrom = new Date(filter.dueDateFrom).toISOString();
+        if (filter.dueDateUntil) params.dueDateUntil = new Date(filter.dueDateUntil).toISOString();
 
-        const tryToIso = (v?: string) => {
-            if (!v) return undefined;
-            const d = new Date(v);
-            return isNaN(d.getTime()) ? undefined : d.toISOString();
-        };
-
-        const dueFromIso = tryToIso(filter.dueDateFrom);
-        const dueUntilIso = tryToIso(filter.dueDateUntil);
-
-        if (dueFromIso) params.dueDateFrom = dueFromIso;
-        if (dueUntilIso) params.dueDateUntil = dueUntilIso;
-
-        return request<ITask[]>('get', 'filter', undefined, params);
+        return params;
     }
 }
