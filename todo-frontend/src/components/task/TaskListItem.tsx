@@ -1,15 +1,14 @@
-import {formatDate} from "@/utils/dateFormat";
-import TaskStatusBadge from "@/components/ui/TaskStatusBadge";
 import {ITask} from "@/domain/ITask";
-
+import {TaskAction} from "@/domain/TaskEnums";
+import {formatDate} from "@/utils/dateFormat";
+import TaskStatusBadge from "@/components/task/TaskStatusBadge";
 
 interface TaskListItemProps {
     task: ITask;
     selectedTask?: ITask | null;
     setSelectedTask: (task: ITask) => void;
-    setActiveAction: (action: "create" | "complete" | "delete" | "edit" | null) => void;
+    setActiveAction: (action: TaskAction) => void;
     setCompletedDate: (date: string) => void;
-    formatDate: (date: string) => string;
 }
 
 export function TaskListItem({
@@ -18,7 +17,6 @@ export function TaskListItem({
                                  setSelectedTask,
                                  setActiveAction,
                                  setCompletedDate,
-                                 formatDate,
                              }: TaskListItemProps) {
     const isSelected = selectedTask?.id === task.id;
 

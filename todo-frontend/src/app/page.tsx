@@ -2,25 +2,23 @@
 
 import {useEffect, useState} from "react";
 import {ITask} from "@/domain/ITask";
-import TaskService from "@/services/TaskService";
-import TaskStatusBadge from "@/components/ui/TaskStatusBadge";
-import DashboardButton from "@/components/common/DashboardButton";
-import {formatDate, untilDueDate} from "@/utils/dateFormat";
-import MaterialIcon from "@/components/common/MaterialIcon";
-import ConfirmActionButtons from "@/components/ui/ConfirmActionButtons";
-import FormErrorMessage from "@/components/common/FormErrorMessage";
 import {IFilter} from "@/domain/IFilter";
-import CompleteTaskForm from "@/components/CompleteTaskForm";
+import {IEditableTask} from "@/domain/IEditableTask";
+import {TaskAction, TaskSortBy} from "@/domain/TaskEnums";
+import TaskService from "@/services/TaskService";
+import {formatDate, untilDueDate} from "@/utils/dateFormat";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import MaterialIcon from "@/components/common/MaterialIcon";
+import MaterialIconLabel from "@/components/common/MaterialIconLabel";
+import DashboardButton from "@/components/common/DashboardButton";
 import ConfirmActionBlock from "@/components/ui/ConfirmActionBlock";
-import CreateTaskForm from "@/components/CreateTaskForm";
-import {TaskListItem} from "@/components/TaskListItem";
 import FilterMenu from "@/components/FilterMenu";
 import SortMenu from "@/components/SortMenu";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
-import TaskMetadata from "@/components/ui/TaskMetaData";
-import {IEditableTask} from "@/domain/IEditableTask";
-import MaterialIconLabel from "@/components/common/MaterialIconLabel";
-import EditTaskForm from "@/components/EditTaskForm";
+import {TaskListItem} from "@/components/task/TaskListItem";
+import TaskMetadata from "@/components/task/TaskMetaData";
+import CreateTaskForm from "@/components/task/CreateTaskForm";
+import EditTaskForm from "@/components/task/EditTaskForm";
+import CompleteTaskForm from "@/components/task/CompleteTaskForm";
 
 export default function ToDoTaskDashboard() {
     const standardInput = "rounded-5 border-0 px-3 py-1"
@@ -29,10 +27,10 @@ export default function ToDoTaskDashboard() {
 
     const [tasks, setTasks] = useState<ITask[]>([]);
     const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
-    const [activeAction, setActiveAction] = useState<"create" | "complete" | "delete" | "edit" | null>(null);
+    const [activeAction, setActiveAction] = useState<TaskAction>(null);
 
     // Filter/Sort States
-    const [sortBy, setSortBy] = useState<"dueAt" | "completedAt" | "createdAt">("dueAt");
+    const [sortBy, setSortBy] = useState<TaskSortBy>("dueAt");
     const [completedLast, setCompletedLast] = useState<boolean>(false);
     const [filter, setFilter] = useState<IFilter>({
         completed: null,
@@ -128,7 +126,7 @@ export default function ToDoTaskDashboard() {
             setSelectedTask(response.data!);
             setActiveAction(null);
             setFormTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
-            await loadTasks();
+            await applyFilter();
         } else {
             console.error("Failed to submit task", response.errors);
         }
@@ -138,10 +136,8 @@ export default function ToDoTaskDashboard() {
         const response = await TaskService.deleteTask(taskId);
         if (!response.errors) {
             setTasks(tasks.filter((task) => task.id !== taskId));
-            if (selectedTask?.id === taskId) {
-                setSelectedTask(null);
-                setActiveAction(null);
-            }
+            setSelectedTask(null);
+            setActiveAction(null);
         } else {
             console.error("Failed to delete task", response.errors);
         }
@@ -155,7 +151,7 @@ export default function ToDoTaskDashboard() {
         if (!response.errors) {
             setSelectedTask(response.data!);
             setActiveAction(null);
-            await loadTasks();
+            await applyFilter();
         } else {
             console.error("Failed to complete task", response.errors);
         }
@@ -218,7 +214,6 @@ export default function ToDoTaskDashboard() {
                                             setSelectedTask={setSelectedTask}
                                             setActiveAction={setActiveAction}
                                             setCompletedDate={setCompletedDate}
-                                            formatDate={formatDate}
                                         />
                                     )
                                 )}

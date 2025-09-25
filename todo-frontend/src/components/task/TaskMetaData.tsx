@@ -1,6 +1,6 @@
-import {formatDate} from "@/utils/dateFormat";
-import TaskStatusBadge from "@/components/ui/TaskStatusBadge";
 import {ITask} from "@/domain/ITask";
+import {formatDate} from "@/utils/dateFormat";
+import TaskStatusBadge from "@/components/task/TaskStatusBadge";
 
 export default function TaskMetadata({ task }: { task: ITask }) {
     return (

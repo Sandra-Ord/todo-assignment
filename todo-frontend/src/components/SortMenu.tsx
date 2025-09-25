@@ -1,9 +1,9 @@
-import MaterialIcon from "@/components/common/MaterialIcon";
+import {TaskSortBy} from "@/domain/TaskEnums";
 import MaterialIconLabel from "@/components/common/MaterialIconLabel";
 
 interface SortMenuProps {
-    sortBy: "dueAt" | "completedAt" | "createdAt";
-    setSortBy: (value: "dueAt" | "completedAt" | "createdAt") => void;
+    sortBy: TaskSortBy;
+    setSortBy: (value: TaskSortBy) => void;
     completedLast: boolean;
     setCompletedLast: (value: boolean) => void;
 }

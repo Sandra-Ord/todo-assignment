@@ -1,5 +1,4 @@
 import {IFilter} from "@/domain/IFilter";
-import MaterialIcon from "@/components/common/MaterialIcon";
 import MaterialIconLabel from "@/components/common/MaterialIconLabel";
 
 interface FilterMenuProps {
@@ -8,6 +7,12 @@ interface FilterMenuProps {
 }
 
 export default function FilterMenu({filter, setFilter}: FilterMenuProps) {
+    const isFilterActive =
+        filter.completed !== null ||
+        (filter.search && filter.search.trim() !== "") ||
+        filter.dueDateFrom !== "" ||
+        filter.dueDateUntil !== "";
+
     return (
         <div className="btn-group">
             <span
@@ -17,7 +22,7 @@ export default function FilterMenu({filter, setFilter}: FilterMenuProps) {
                 aria-expanded="false"
                 data-bs-auto-close="outside"
             >
-                <MaterialIconLabel label="Filter by" name="filter_list" className="flex-row-reverse" spanClassName="d-md-none d-lg-inline"/>
+                <MaterialIconLabel label="Filter by" name="filter_list" className={`flex-row-reverse ${isFilterActive ? "title" : ""}`} spanClassName="d-md-none d-lg-inline"/>
             </span>
             <ul className="dropdown-menu dropdown-menu-end">
                 <li className="px-3 py-1 dropdown-item">

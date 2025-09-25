@@ -1,11 +1,11 @@
 import {IEditableTask} from "@/domain/IEditableTask";
-import FormErrorMessage from "@/components/common/FormErrorMessage";
-import TaskMetadata from "@/components/ui/TaskMetaData";
-import MaterialIcon from "@/components/common/MaterialIcon";
 import {ITask} from "@/domain/ITask";
-import ConfirmActionBlock from "@/components/ui/ConfirmActionBlock";
-import MaterialIconLabel from "@/components/common/MaterialIconLabel";
 import {formatDate} from "@/utils/dateFormat";
+import FormErrorMessage from "@/components/common/FormErrorMessage";
+import MaterialIcon from "@/components/common/MaterialIcon";
+import MaterialIconLabel from "@/components/common/MaterialIconLabel";
+import ConfirmActionBlock from "@/components/ui/ConfirmActionBlock";
+import TaskMetadata from "@/components/task/TaskMetaData";
 
 interface EditTaskFormProps {
     editTask: IEditableTask,

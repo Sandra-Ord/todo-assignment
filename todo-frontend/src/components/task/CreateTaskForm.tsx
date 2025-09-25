@@ -1,23 +1,12 @@
+import {IEditableTask} from "@/domain/IEditableTask";
 import FormErrorMessage from "@/components/common/FormErrorMessage";
-import DashboardButton from "@/components/common/DashboardButton";
 import MaterialIcon from "@/components/common/MaterialIcon";
+import DashboardButton from "@/components/common/DashboardButton";
 
 interface CreateTaskFormProps {
     standardInputClassnames: string;
-    createTask: {
-        taskName: string;
-        taskNameValidationError: string;
-        dueDate: string;
-        dueDateValidationError: string;
-    };
-    setCreateTask: React.Dispatch<
-        React.SetStateAction<{
-            taskName: string;
-            taskNameValidationError: string;
-            dueDate: string;
-            dueDateValidationError: string;
-        }>
-    >;
+    createTask: IEditableTask;
+    setCreateTask: (value: IEditableTask) => void;
     handleCreateTask: () => void;
     onClose: () => void;
 }

@@ -3,7 +3,7 @@ interface StatusBadgeProps {
     completedAt?: string | Date | null;
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ dueAt, completedAt }) => {
+export default function StatusBadge({ dueAt, completedAt } : StatusBadgeProps) {
     let badgeText = "";
     let badgeClass = "";
 
@@ -22,5 +22,3 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ dueAt, completedAt }) => {
 
     return <span className={`badge ${badgeClass}`}>{badgeText}</span>;
 };
-
-export default StatusBadge;
