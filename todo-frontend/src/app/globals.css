@@ -87,6 +87,10 @@ body {
     font-weight: bold;
 }
 
+.scrollable {
+    height: 70vh !important;
+}
+
 * {
   box-sizing: border-box;
   padding: 0;

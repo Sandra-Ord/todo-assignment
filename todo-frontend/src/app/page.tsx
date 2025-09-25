@@ -1,12 +1,14 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {ITask} from "@/domain/ITask";
 import {IFilter} from "@/domain/IFilter";
 import {IEditableTask} from "@/domain/IEditableTask";
 import {TaskAction, TaskSortBy} from "@/domain/TaskEnums";
 import TaskService from "@/services/TaskService";
 import {formatDate, untilDueDate} from "@/utils/dateFormat";
+import {handleApiCall} from "@/utils/api";
+import {isTaskValid, sortTasks, validateTask} from "@/utils/taskUtils";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import MaterialIcon from "@/components/common/MaterialIcon";
 import MaterialIconLabel from "@/components/common/MaterialIconLabel";
@@ -20,12 +22,15 @@ import CreateTaskForm from "@/components/task/CreateTaskForm";
 import EditTaskForm from "@/components/task/EditTaskForm";
 import CompleteTaskForm from "@/components/task/CompleteTaskForm";
 
+const EMPTY_TASK_FORM: IEditableTask = { taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: "" };
+
 export default function ToDoTaskDashboard() {
     const standardInput = "rounded-5 border-0 px-3 py-1"
 
     const [isLoading, setIsLoading] = useState(true);
 
     const [tasks, setTasks] = useState<ITask[]>([]);
+
     const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
     const [activeAction, setActiveAction] = useState<TaskAction>(null);
 
@@ -39,122 +44,78 @@ export default function ToDoTaskDashboard() {
         dueDateUntil: ""
     });
 
+    const sortedTasks = useMemo(() => sortTasks(tasks, sortBy, completedLast), [tasks, sortBy, completedLast]);
+
     // Create/Edit/Complete Task States
     const [completedDate, setCompletedDate] = useState("");
-    const [formTask, setFormTask] = useState<IEditableTask>({
-        taskName: "",
-        taskNameValidationError: "",
-        dueDate: "",
-        dueDateValidationError: ""
-    });
+    const [formTask, setFormTask] = useState<IEditableTask>(EMPTY_TASK_FORM);
 
     const loadTasks = async () => {
         setIsLoading(true);
-        const response = await TaskService.getTasks();
-        if (response.data) {
-            setTasks(response.data);
-        }
+        await handleApiCall(
+            () => TaskService.getTasks(),
+            (data) => setTasks(data),
+            "loading tasks"
+        );
         setIsLoading(false);
     };
 
-    const sortTasks = (tasks: ITask[]) => {
-        return [...tasks].sort((a, b) => {
-            if (completedLast) {
-                const aCompleted = Boolean(a.completedAt);
-                const bCompleted = Boolean(b.completedAt);
-
-                if (aCompleted && !bCompleted) return 1; // b before a
-                if (!aCompleted && bCompleted) return -1; // a before b
-            }
-            const aDate = new Date(a[sortBy] ?? 0).getTime();
-            const bDate = new Date(b[sortBy] ?? 0).getTime();
-
-            if (sortBy === "completedAt") {
-                if (!aDate && bDate) return 1;  // a has no completedAt, b first
-                if (aDate && !bDate) return -1; // a has completedAt, a first
-            }
-
-            return bDate - aDate; // descending
-        });
-    }
-
     const applyFilter = async () => {
-        const preparedFilter: IFilter = {
-            ...filter,
-            dueDateFrom: filter.dueDateFrom ? (new Date(filter.dueDateFrom).toISOString()) : "",
-            dueDateUntil: filter.dueDateUntil ? (new Date(filter.dueDateUntil).toISOString()) : ""
-        };
-
-        const response = await TaskService.getFilteredTasks({
-            completed: preparedFilter.completed,
-            search: preparedFilter.search || "",
-            dueDateFrom: preparedFilter.dueDateFrom || "",
-            dueDateUntil: preparedFilter.dueDateUntil || ""
-        });
-
-        if (response.data) {
-            setTasks(response.data);
-        } else if (response.errors) {
-            console.error("Failed to fetch filtered tasks", response.errors);
-        }
+        setIsLoading(true);
+        await handleApiCall(
+            () => TaskService.getFilteredTasks(filter),
+            (data) => setTasks(data),
+            "applying task filter"
+        );
+        setIsLoading(false);
     };
-
-    function validateTask(task: IEditableTask): IEditableTask {
-        const updated = {...task};
-        updated.taskNameValidationError = task.taskName ? "" : "Task name is required!";
-        updated.dueDateValidationError = task.dueDate ? "" : "Due date is required!";
-        return updated;
-    }
 
     const handleSubmitTask = async () => {
         const validated = validateTask(formTask);
-        if (validated.taskNameValidationError || validated.dueDateValidationError) {
+        if (isTaskValid(validated)) {
             setFormTask(validated);
             return;
         }
 
-        let response;
-        if (selectedTask && activeAction === "edit") {
-            response = await TaskService.editTask(selectedTask.id, formTask.taskName, formTask.dueDate);
-        } else if (!selectedTask && activeAction === "create") {
-            response = await TaskService.createTask(formTask.taskName, formTask.dueDate);
-        } else {
-            return;
-        }
-
-        if (!response.errors) {
-            setSelectedTask(response.data!);
-            setActiveAction(null);
-            setFormTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
-            await applyFilter();
-        } else {
-            console.error("Failed to submit task", response.errors);
-        }
+        await handleApiCall(
+            selectedTask && activeAction === "edit"
+                ? () => TaskService.editTask(selectedTask.id, formTask.taskName, formTask.dueDate)
+                : () => TaskService.createTask(formTask.taskName, formTask.dueDate),
+            async (data) => {
+                setSelectedTask(data);
+                setActiveAction(null);
+                setFormTask(EMPTY_TASK_FORM);
+                await applyFilter();
+            },
+            selectedTask ? "editing task" : "creating task"
+        );
     }
 
     const handleDeleteTask = async (taskId: string) => {
-        const response = await TaskService.deleteTask(taskId);
-        if (!response.errors) {
-            setTasks(tasks.filter((task) => task.id !== taskId));
-            setSelectedTask(null);
-            setActiveAction(null);
-        } else {
-            console.error("Failed to delete task", response.errors);
-        }
+        await handleApiCall(
+            () => TaskService.deleteTask(taskId),
+            (data) => {
+                setTasks(tasks.filter((task) => task.id !== taskId));
+                setSelectedTask(null);
+                setActiveAction(null);
+            },
+            "deleting task"
+        );
     }
 
     const handleAlterTaskCompletion = async () => {
         if (!selectedTask) return;
-        const response = selectedTask.completedAt
-            ? await TaskService.uncompleteTask(selectedTask.id)
-            : await TaskService.completeTask(selectedTask.id, completedDate);
-        if (!response.errors) {
-            setSelectedTask(response.data!);
-            setActiveAction(null);
-            await applyFilter();
-        } else {
-            console.error("Failed to complete task", response.errors);
-        }
+        await handleApiCall(
+            selectedTask.completedAt
+                ? () => TaskService.uncompleteTask(selectedTask.id)
+                : () => TaskService.completeTask(selectedTask.id, completedDate),
+            async (data) => {
+                setSelectedTask(data);
+                setActiveAction(null);
+                await applyFilter();
+            },
+            selectedTask.completedAt ? "marking task as incomplete" : "marking task as complete"
+        );
     }
 
     useEffect(() => {
@@ -169,12 +130,7 @@ export default function ToDoTaskDashboard() {
                 <MaterialIconLabel name="add_task" label="To Do Dashboard"/>
                 <MaterialIcon name="add" className="touchable-element"
                               onClick={() => {
-                                  setFormTask({
-                                      taskName: "",
-                                      taskNameValidationError: "",
-                                      dueDate: "",
-                                      dueDateValidationError: ""
-                                  });
+                                  setFormTask(EMPTY_TASK_FORM);
                                   setSelectedTask(null);
                                   setActiveAction("create");
                               }}/>
@@ -195,8 +151,8 @@ export default function ToDoTaskDashboard() {
 
                     {/*Sort and Filter*/}
                     <div className="d-flex justify-content-between align-items-center gap-4">
-                        <SortMenu sortBy={sortBy} setSortBy={setSortBy} completedLast={completedLast}
-                                  setCompletedLast={setCompletedLast}/>
+                        <SortMenu sortBy={sortBy} setSortBy={setSortBy}
+                                  completedLast={completedLast} setCompletedLast={setCompletedLast}/>
                         <FilterMenu filter={filter} setFilter={setFilter}/>
                     </div>
 
@@ -204,9 +160,9 @@ export default function ToDoTaskDashboard() {
                     <div className="flex-grow-1 overflow-auto vh-100">
                         {isLoading ? (
                             <LoadingSpinner/>
-                        ) : (
+                        ) : sortedTasks.length > 0 ? (
                             <div className="d-flex flex-column gap-1">
-                                {sortTasks(tasks).map((task) => (
+                                {sortTasks(tasks, sortBy, completedLast).map((task) => (
                                         <TaskListItem
                                             key={task.id}
                                             task={task}
@@ -217,6 +173,10 @@ export default function ToDoTaskDashboard() {
                                         />
                                     )
                                 )}
+                            </div>
+                        ) : (
+                            <div className="text-center text-muted py-4">
+                                No tasks found.
                             </div>
                         )}
                     </div>
@@ -229,16 +189,11 @@ export default function ToDoTaskDashboard() {
                     {selectedTask ? (
                         <>
 
-                            {activeAction == "edit" ? (
+                            {activeAction === "edit" ? (
                                 <EditTaskForm editTask={formTask} setEditTask={setFormTask} selectedTask={selectedTask}
                                               onConfirm={handleSubmitTask}
                                               onCancel={() => {
-                                                  setFormTask({
-                                                      taskName: "",
-                                                      taskNameValidationError: "",
-                                                      dueDate: "",
-                                                      dueDateValidationError: ""
-                                                  });
+                                                  setFormTask(EMPTY_TASK_FORM);
                                                   setActiveAction(null);
                                               }}
                                               standardInputClassnames={standardInput}/>
@@ -333,12 +288,7 @@ export default function ToDoTaskDashboard() {
                             setCreateTask={setFormTask}
                             handleCreateTask={handleSubmitTask}
                             onClose={() => {
-                                setFormTask({
-                                    taskName: "",
-                                    taskNameValidationError: "",
-                                    dueDate: "",
-                                    dueDateValidationError: ""
-                                });
+                                setFormTask(EMPTY_TASK_FORM);
                                 setSelectedTask(null);
                                 setActiveAction(null);
                             }}/>
@@ -346,12 +296,7 @@ export default function ToDoTaskDashboard() {
                         <MaterialIconLabel label="Add a new task to do" name="add_circle"
                                            className='title flex-column h-100 justify-content-center'
                                            onClick={() => {
-                                               setFormTask({
-                                                   taskName: "",
-                                                   taskNameValidationError: "",
-                                                   dueDate: "",
-                                                   dueDateValidationError: ""
-                                               });
+                                               setFormTask(EMPTY_TASK_FORM);
                                                setSelectedTask(null);
                                                setActiveAction("create");
                                            }}/>
