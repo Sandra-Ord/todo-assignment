@@ -18,7 +18,7 @@ export default function ConfirmActionBlock({
                                                onCancel,
                                            }: ConfirmActionBlockProps) {
     return (
-        <div className="d-flex flex-column gap-4 py-5">
+        <div className="d-flex flex-column gap-4">
             <div className="text-center text-muted">{message}</div>
             <ConfirmActionButtons
                 confirmText={confirmText}

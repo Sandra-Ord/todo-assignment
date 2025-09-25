@@ -45,7 +45,7 @@ export default function EditTaskForm({
                 <TaskMetadata task={selectedTask}/>
             </div>
 
-            <div className="p-2">
+            <div className="p-2 pb-5">
                 <div className="d-flex flex-column gap-2">
                     <div className="d-flex justify-content-between align-items-center">
                         <label className="d-flex align-items-center gap-2"

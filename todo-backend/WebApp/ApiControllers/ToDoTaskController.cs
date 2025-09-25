@@ -30,7 +30,7 @@ public class ToDoTaskController : ControllerBase
         return Ok(await _uow.ToDoTasks.GetTasks());
     }
 
-    // GET: api/ToDoTask/5
+    // GET: api/ToDoTask/{id}
     [HttpGet("{id}")]
     public async Task<ActionResult<ToDoTask>> GetToDoTask(int id)
     {

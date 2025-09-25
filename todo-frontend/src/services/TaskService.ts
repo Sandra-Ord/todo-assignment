@@ -12,10 +12,12 @@ export default class TaskService {
         baseURL: process.env.NEXT_PUBLIC_BACKEND_URL + "/api/ToDoTask/",
     })
 
+    // GET: api/ToDoTask
     static async getTasks() : Promise<IResponse<ITask[]>>{
         return request<ITask[]>('get', '');
     }
 
+    // POST: api/ToDoTask
     static async createTask(taskName: string, dueDate: string) : Promise<IResponse<ITask>> {
         const taskData = {
             taskName: taskName,
@@ -27,6 +29,7 @@ export default class TaskService {
         return request<ITask>('post', '', taskData);
     }
 
+    // PUT: api/ToDoTask/{id}
     static async editTask(id:string, taskName: string, dueDate: string) : Promise<IResponse<ITask>> {
         const taskData = {
             id: id,
@@ -37,18 +40,22 @@ export default class TaskService {
         return request<ITask>('put', `${id}`, taskData);
     }
 
+    // POST: api/ToDoTask/{id}/complete
     static async completeTask(id:string, completedDate: string) : Promise<IResponse<ITask>> {
         return request<ITask>('post', `${id}/complete`, { completedAt: completedDate });
     }
 
+    // POST: api/ToDoTask/{id}/uncomplete
     static async uncompleteTask(id:string) : Promise<IResponse<ITask>> {
         return request<ITask>('post', `${id}/uncomplete`);
     }
 
+    // DELETE: api/ToDoTask/{id}
     static async deleteTask(taskId: string) : Promise<IResponse<ITask>> {
         return request<ITask>('delete', `${taskId}`);
     }
 
+    // GET: api/filter
     static async getFilteredTasks(filter: IFilter): Promise<IResponse<ITask[]>> {
         const params: Record<string, any> = {};
 

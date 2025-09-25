@@ -147,25 +147,15 @@ export default function ToDoTaskDashboard() {
         }
     }
 
-    const handleCompleteTask = async (taskId: string) => {
-        const response = await TaskService.completeTask(taskId, completedDate);
+    const handleAlterTaskCompletion = async () => {
+        if (!selectedTask) return;
+        const response = selectedTask.completedAt
+            ? await TaskService.uncompleteTask(selectedTask.id)
+            : await TaskService.completeTask(selectedTask.id, completedDate);
         if (!response.errors) {
-            if (selectedTask?.id === taskId) {
-                setSelectedTask(response.data!);
-                setActiveAction(null);
-            }
-        } else {
-            console.error("Failed to complete task", response.errors);
-        }
-    }
-
-    const handleUncompleteTask = async (taskId: string) => {
-        const response = await TaskService.uncompleteTask(taskId);
-        if (!response.errors) {
-            if (selectedTask?.id === taskId) {
-                setSelectedTask(response.data!);
-                setActiveAction(null);
-            }
+            setSelectedTask(response.data!);
+            setActiveAction(null);
+            await loadTasks();
         } else {
             console.error("Failed to complete task", response.errors);
         }
@@ -183,7 +173,12 @@ export default function ToDoTaskDashboard() {
                 <MaterialIconLabel name="add_task" label="To Do Dashboard"/>
                 <MaterialIcon name="add" className="touchable-element"
                               onClick={() => {
-                                  setFormTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
+                                  setFormTask({
+                                      taskName: "",
+                                      taskNameValidationError: "",
+                                      dueDate: "",
+                                      dueDateValidationError: ""
+                                  });
                                   setSelectedTask(null);
                                   setActiveAction("create");
                               }}/>
@@ -243,7 +238,12 @@ export default function ToDoTaskDashboard() {
                                 <EditTaskForm editTask={formTask} setEditTask={setFormTask} selectedTask={selectedTask}
                                               onConfirm={handleSubmitTask}
                                               onCancel={() => {
-                                                  setFormTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
+                                                  setFormTask({
+                                                      taskName: "",
+                                                      taskNameValidationError: "",
+                                                      dueDate: "",
+                                                      dueDateValidationError: ""
+                                                  });
                                                   setActiveAction(null);
                                               }}
                                               standardInputClassnames={standardInput}/>
@@ -268,17 +268,24 @@ export default function ToDoTaskDashboard() {
                                         <TaskMetadata task={selectedTask}/>
                                     </div>
                                     {/*Task Detail Information*/}
-                                    <div className="p-2 d-flex flex-column gap-2">
+                                    <div className="d-flex flex-column gap-2 p-2 pb-5">
 
-                                        {activeAction === "complete" && (
+                                        {(activeAction === "complete" && !selectedTask.completedAt) ? (
                                             <CompleteTaskForm
                                                 standardInputClassnames={standardInput}
                                                 completedDate={completedDate}
                                                 setCompletedDate={setCompletedDate}
-                                                onConfirm={() => handleCompleteTask(selectedTask.id)}
+                                                onConfirm={() => handleAlterTaskCompletion()}
                                                 onCancel={() => setActiveAction(null)}
                                             />
-                                        )}
+                                        ) : (activeAction === "complete" && (
+                                            <ConfirmActionBlock message="Mark the task as incomplete?"
+                                                                confirmText="Uncomplete"
+                                                                confirmIcon="check_box_outline_blank"
+                                                                confirmClass="warning"
+                                                                onConfirm={() => handleAlterTaskCompletion()}
+                                                                onCancel={() => setActiveAction(null)}/>
+                                        ))}
 
                                         <div className="d-flex gap-2">
                                             <MaterialIconLabel name={"calendar_clock"}
@@ -331,7 +338,12 @@ export default function ToDoTaskDashboard() {
                             setCreateTask={setFormTask}
                             handleCreateTask={handleSubmitTask}
                             onClose={() => {
-                                setFormTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
+                                setFormTask({
+                                    taskName: "",
+                                    taskNameValidationError: "",
+                                    dueDate: "",
+                                    dueDateValidationError: ""
+                                });
                                 setSelectedTask(null);
                                 setActiveAction(null);
                             }}/>
@@ -339,7 +351,12 @@ export default function ToDoTaskDashboard() {
                         <MaterialIconLabel label="Add a new task to do" name="add_circle"
                                            className='title flex-column h-100 justify-content-center'
                                            onClick={() => {
-                                               setFormTask({taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: ""});
+                                               setFormTask({
+                                                   taskName: "",
+                                                   taskNameValidationError: "",
+                                                   dueDate: "",
+                                                   dueDateValidationError: ""
+                                               });
                                                setSelectedTask(null);
                                                setActiveAction("create");
                                            }}/>
