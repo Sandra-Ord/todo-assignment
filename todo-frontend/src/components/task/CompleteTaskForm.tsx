@@ -16,8 +16,8 @@ export default function CompleteTaskForm({
                                              onCancel,
                                          }: CompleteTaskFormProps) {
     return (
-        <div className="d-flex flex-column gap-2">
-            <div className="d-flex justify-content-between align-items-center">
+        <div className="d-flex flex-column gap-4">
+            <div className="d-flex justify-content-between align-items-center pt-4">
                 <span className="fw-bold">Task completed as of</span>
                 <input
                     className={standardInputClassnames}

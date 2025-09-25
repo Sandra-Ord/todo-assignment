@@ -1,6 +1,7 @@
 import {IEditableTask} from "@/domain/IEditableTask";
 import {ITask} from "@/domain/ITask";
 import {TaskSortBy} from "@/domain/TaskEnums";
+import {IFilter} from "@/domain/IFilter";
 
 export function validateTask(task: IEditableTask): IEditableTask {
     const updated = {...task};
@@ -33,3 +34,24 @@ export function sortTasks(tasks: ITask[], sortBy: TaskSortBy, completedLast: boo
         return bDate - aDate; // descending
     });
 }
+
+export function isFilterActive(filter: IFilter) : boolean {
+    return filter.completed !== null ||
+        (filter.search && filter.search.trim() !== "") ||
+        filter.dueDateFrom !== "" ||
+        filter.dueDateUntil !== "";
+}
+
+export const EMPTY_TASK_FORM: IEditableTask = {
+    taskName: "",
+    taskNameValidationError: "",
+    dueDate: "",
+    dueDateValidationError: ""
+};
+
+export const EMPTY_FILTER: IFilter = {
+    completed: null,
+    search: "",
+    dueDateFrom: "",
+    dueDateUntil: ""
+};

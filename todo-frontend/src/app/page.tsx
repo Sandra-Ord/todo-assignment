@@ -6,9 +6,8 @@ import {IFilter} from "@/domain/IFilter";
 import {IEditableTask} from "@/domain/IEditableTask";
 import {TaskAction, TaskSortBy} from "@/domain/TaskEnums";
 import TaskService from "@/services/TaskService";
-import {formatDate, untilDueDate} from "@/utils/dateFormat";
 import {handleApiCall} from "@/utils/api";
-import {isTaskValid, sortTasks, validateTask} from "@/utils/taskUtils";
+import {EMPTY_FILTER, EMPTY_TASK_FORM, isFilterActive, isTaskValid, sortTasks, validateTask} from "@/utils/taskUtils";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import MaterialIcon from "@/components/common/MaterialIcon";
 import MaterialIconLabel from "@/components/common/MaterialIconLabel";
@@ -21,8 +20,8 @@ import TaskMetadata from "@/components/task/TaskMetaData";
 import CreateTaskForm from "@/components/task/CreateTaskForm";
 import EditTaskForm from "@/components/task/EditTaskForm";
 import CompleteTaskForm from "@/components/task/CompleteTaskForm";
+import TaskDetails from "@/components/task/TaskDetails";
 
-const EMPTY_TASK_FORM: IEditableTask = { taskName: "", taskNameValidationError: "", dueDate: "", dueDateValidationError: "" };
 
 export default function ToDoTaskDashboard() {
     const standardInput = "rounded-5 border-0 px-3 py-1"
@@ -37,12 +36,7 @@ export default function ToDoTaskDashboard() {
     // Filter/Sort States
     const [sortBy, setSortBy] = useState<TaskSortBy>("dueAt");
     const [completedLast, setCompletedLast] = useState<boolean>(false);
-    const [filter, setFilter] = useState<IFilter>({
-        completed: null,
-        search: "",
-        dueDateFrom: "",
-        dueDateUntil: ""
-    });
+    const [filter, setFilter] = useState<IFilter>(EMPTY_FILTER);
 
     const sortedTasks = useMemo(() => sortTasks(tasks, sortBy, completedLast), [tasks, sortBy, completedLast]);
 
@@ -50,29 +44,22 @@ export default function ToDoTaskDashboard() {
     const [completedDate, setCompletedDate] = useState("");
     const [formTask, setFormTask] = useState<IEditableTask>(EMPTY_TASK_FORM);
 
-    const loadTasks = async () => {
+    const fetchTasks = async () => {
         setIsLoading(true);
+        const filterActive = isFilterActive(filter);
         await handleApiCall(
-            () => TaskService.getTasks(),
+            filterActive
+                ? () => TaskService.getFilteredTasks(filter)
+                : () => TaskService.getTasks(),
             (data) => setTasks(data),
-            "loading tasks"
-        );
-        setIsLoading(false);
-    };
-
-    const applyFilter = async () => {
-        setIsLoading(true);
-        await handleApiCall(
-            () => TaskService.getFilteredTasks(filter),
-            (data) => setTasks(data),
-            "applying task filter"
+            filterActive ? "applying task filter" : "loading tasks"
         );
         setIsLoading(false);
     };
 
     const handleSubmitTask = async () => {
         const validated = validateTask(formTask);
-        if (isTaskValid(validated)) {
+        if (!isTaskValid(validated)) {
             setFormTask(validated);
             return;
         }
@@ -85,7 +72,7 @@ export default function ToDoTaskDashboard() {
                 setSelectedTask(data);
                 setActiveAction(null);
                 setFormTask(EMPTY_TASK_FORM);
-                await applyFilter();
+                await fetchTasks();
             },
             selectedTask ? "editing task" : "creating task"
         );
@@ -112,14 +99,14 @@ export default function ToDoTaskDashboard() {
             async (data) => {
                 setSelectedTask(data);
                 setActiveAction(null);
-                await applyFilter();
+                await fetchTasks();
             },
             selectedTask.completedAt ? "marking task as incomplete" : "marking task as complete"
         );
     }
 
     useEffect(() => {
-        loadTasks();
+        fetchTasks();
     }, []);
 
     return (
@@ -136,6 +123,7 @@ export default function ToDoTaskDashboard() {
                               }}/>
             </h3>
 
+            {/*Dashboard body*/}
             <div className="d-flex flex-wrap flex-row-reverse p-2">
 
                 {/*Task List Section*/}
@@ -145,7 +133,7 @@ export default function ToDoTaskDashboard() {
                     <div className="d-flex justify-content-between align-items-center gap-4">
                         <input className={`${standardInput} w-100`} placeholder="Search task..." value={filter.search}
                                onChange={(e) => setFilter({...filter, search: e.target.value})}></input>
-                        <DashboardButton text="Search" icon="search" onClick={() => applyFilter()}
+                        <DashboardButton text="Search" icon="search" onClick={() => fetchTasks()}
                                          className="flex-row-reverse primary" textClassName="d-none d-md-inline"/>
                     </div>
 
@@ -188,7 +176,6 @@ export default function ToDoTaskDashboard() {
 
                     {selectedTask ? (
                         <>
-
                             {activeAction === "edit" ? (
                                 <EditTaskForm editTask={formTask} setEditTask={setFormTask} selectedTask={selectedTask}
                                               onConfirm={handleSubmitTask}
@@ -218,8 +205,9 @@ export default function ToDoTaskDashboard() {
                                         <TaskMetadata task={selectedTask}/>
                                     </div>
                                     {/*Task Detail Information*/}
-                                    <div className="d-flex flex-column gap-2 p-2 pb-5">
+                                    <TaskDetails selectedTask={selectedTask}/>
 
+                                    <div className="d-flex flex-column gap-2 p-2 pt-2 pb-5">
                                         {(activeAction === "complete" && !selectedTask.completedAt) ? (
                                             <CompleteTaskForm
                                                 standardInputClassnames={standardInput}
@@ -236,23 +224,12 @@ export default function ToDoTaskDashboard() {
                                                                 onConfirm={() => handleAlterTaskCompletion()}
                                                                 onCancel={() => setActiveAction(null)}/>
                                         ))}
-
-                                        <div className="d-flex gap-2">
-                                            <MaterialIconLabel name={"calendar_clock"}
-                                                               label={`Due ${formatDate(selectedTask.dueAt)}`}/>
-                                            <span className="text-muted">{untilDueDate(selectedTask.dueAt)}</span>
-                                        </div>
-
-                                        {selectedTask.completedAt && (
-                                            <MaterialIconLabel name="event_available"
-                                                               label={`Completed at ${formatDate(selectedTask.completedAt)}`}/>
-                                        )}
                                     </div>
                                 </>
                             )}
 
                             {/*Select Action Bar (edit/delete)*/}
-                            {activeAction === null && (
+                            {activeAction === null ? (
                                 <div className="d-flex justify-content-between align-items-center py-5">
                                     <MaterialIconLabel label="Delete" name="delete" className='text-muted'
                                                        onClick={() => {
@@ -270,16 +247,15 @@ export default function ToDoTaskDashboard() {
                                         });
                                     }}/>
                                 </div>
-                            )}
-
-                            {activeAction === "delete" && (
+                            ) : (activeAction === "delete" ? (
                                 <ConfirmActionBlock
                                     message="Are you sure you want to delete this task?"
                                     confirmText="Delete" confirmIcon="delete" confirmClass="danger"
                                     onConfirm={() => handleDeleteTask(selectedTask.id)}
                                     onCancel={() => setActiveAction(null)}
                                 />
-                            )}
+                            ) : (<></>))}
+
                         </>
                     ) : activeAction === "create" ? (
                         <CreateTaskForm
